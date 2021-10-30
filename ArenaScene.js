@@ -69,12 +69,15 @@ class ArenaScene extends Phaser.Scene {
             timeScale: 1,
             repeat: -1
         }); 
-        this.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0);
-        //gameState.blueprint.toggleOff();
+        this.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(5);
+        gameState.moneyText = this.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {
+            fill: '#OOOOOO', 
+            fontSize: '30px',
+            fontFamily: 'Qahiri',
+            strokeThickness: 10,
+        }).setDepth(5);
         this.physics.add.collider(gameState.character, gameState.buildings);
         //this.physics.add.overlap(gameState.blueprint, gameState.buildings)
-        gameState.moneyText = this.add.text( window.innerWidth - 160, 10, `${gameState.money}`, {fill: '#OOOOOO', fontSize: '30px'}); 
-        
     }
     update(){
         gameState.chracterControls(this,gameState.character,gameState.characterStats);

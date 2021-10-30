@@ -155,7 +155,6 @@ let gameState = {
                     dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
                     if(dist<closest){
                         closest = dist;
-                        console.log("closer");
                         target = gameState.buildings.getChildren()[i];
                     }
                 }
