@@ -6,9 +6,16 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('character','images/character.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('zombie1','images/zombie1.png',{frameWidth: 32,frameHeight:32.1});
         this.load.spritesheet('gatlingTower','images/gatlingTower.png',{frameWidth: 60,frameHeight:55});
+        this.load.spritesheet('factory','images/factory.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('buildingExplosion','images/buildingExplosion.png',{frameWidth: 75,frameHeight:75});
         this.load.image('bullet','images/bullet.png');
+        this.load.image('title','images/title.png');
+        this.load.image('moneySign','images/moneySign.png');
+        this.load.image('startButton','images/startButton.png');
     }
     create() {
+        gameState.money = 250;
+        gameState.characterStats.health = 100;
         //character Animations
         this.anims.create({
             key: 'characterIdle',
@@ -45,6 +52,11 @@ class MenuScene extends Phaser.Scene {
             frames:this.anims.generateFrameNames('zombie1',{start: 29,end: 33})
         });
         this.anims.create({
+            key: 'explode',
+            frameRate: 7,
+            frames:this.anims.generateFrameNames('buildingExplosion',{start: 0,end: 7})
+        });
+        this.anims.create({
             key: 'gatlingTowerIdle',
             frameRate: 13,
             frames:this.anims.generateFrameNames('galtingTower',{start: 0,end: 0})
@@ -60,7 +72,25 @@ class MenuScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('galtingTower',{start: 7,end: 8})
         });
-        this.scene.start('ArenaScene');
+        this.anims.create({
+            key: 'factoryIdle',
+            frameRate: 6,
+            frames:this.anims.generateFrameNames('factory',{start: 0,end: 0})
+        });
+        this.anims.create({
+            key: 'factoryAction',
+            frameRate: 7,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('factory',{start: 1,end: 2})
+        });
+        this.add.image(window.innerWidth/2,100,'title');
+        this.add.image(200,window.innerHeight/2,'zombie1').setScale(10);
+        this.add.image(window.innerWidth-200,window.innerHeight/2,'character').setScale(10);
+        var button = this.add.image(window.innerWidth/2,window.innerHeight/2,'startButton').setInteractive();
+        gameState.globalScene = this;
+        button.on('pointerdown', function(pointer){
+            gameState.globalScene.scene.start('ArenaScene');
+        });
 	}
     update(){
         
