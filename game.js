@@ -119,24 +119,15 @@ let gameState = {
             }); 
         },
         movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombie1Stats.speed);
             if(target.x > zombie.x){
-                zombie.setVelocityX(gameState.zombie1Stats.speed);
                 zombie.flipX = false;
                 zombie.anims.play('zombie1Walk',true);
             }
             else if(target.x < zombie.x){
-                zombie.setVelocityX(-gameState.zombie1Stats.speed);
                 zombie.flipX = true;
                 zombie.anims.play('zombie1Walk',true);
             }
-            if(target.y > zombie.y){
-                zombie.setVelocityY(gameState.zombie1Stats.speed);
-                zombie.anims.play('zombie1Walk',true);
-            }
-            else if(target.y < zombie.y){
-                zombie.setVelocityY(-gameState.zombie1Stats.speed);
-                zombie.anims.play('zombie1Walk',true);
-            } 
         },
         attack: function (scene, target){
             if(target == gameState.character){
@@ -214,7 +205,7 @@ let gameState = {
     },
     
     factoryStats:{
-        cost: 50,
+        cost: 200,
         damage: 0,
         health: 200,
         attackRange: 0,
@@ -231,7 +222,7 @@ let gameState = {
                 delay: 5000,
                 callback: ()=>{
                     if(building.health >0){
-                        gameState.money += 20;
+                        gameState.money += 10;
                         gameState.updateMoney();
                     }
                 },  

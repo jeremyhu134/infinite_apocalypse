@@ -44,7 +44,7 @@ class ArenaScene extends Phaser.Scene {
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
         this.time.addEvent({
-            delay: 30000,
+            delay: 1,
             callback: ()=>{
                 this.time.addEvent({
                     delay: 1,
@@ -66,8 +66,7 @@ class ArenaScene extends Phaser.Scene {
                 }
             },  
             startAt: 0,
-            timeScale: 1,
-            repeat: -1
+            timeScale: 1
         }); 
         this.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(5);
         gameState.moneyText = this.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {
