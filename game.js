@@ -28,6 +28,7 @@ let gameState = {
         speed : 200,
         health: 100
     },
+    invisibleTarget : null,
     
     chracterControls : function(scene){
         if(gameState.characterStats.health > 0){
@@ -123,7 +124,7 @@ let gameState = {
         sightRange: 200,
         attackSpeed: 1000,
         spawnZombie: function(scene){
-            var zombie = gameState.zombies.create(Math.random()*11,Math.random()*window.innerHeight-32,`zombie1`).setOrigin(0,0).setDepth(1);
+            var zombie = gameState.zombies.create(Math.random()*11,Math.random()*window.innerHeight-32,`zombie1`).setDepth(1);
             zombie.anims.play(`zombie1Spawn`);
             scene.time.addEvent({
                 delay: 1310,
@@ -153,7 +154,7 @@ let gameState = {
                 target.health -= gameState.zombie1Stats.damage;
             }
         },
-        findTarget: function(scene,zombie,closest){
+        findTarget: function(scene,zombie){
             var dist;
             var closest = 10000;
             var target = gameState.character;
@@ -172,6 +173,7 @@ let gameState = {
             return target;
         },
         behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombie1Stats.health;
             var target = gameState.zombie1Stats.findTarget(scene,zombie);
             var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
             var loop = scene.time.addEvent({
@@ -184,21 +186,27 @@ let gameState = {
                 repeat: -1
             }); 
             loop.paused = true;
-            scene.time.addEvent({
+            var bLoop = scene.time.addEvent({
                 delay: 1,
                 callback: ()=>{
-                    target = gameState.zombie1Stats.findTarget(scene,zombie);
-                    dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
-                    if(dist < gameState.zombie1Stats.attackRange){
-                        zombie.setVelocityX(0);
-                        zombie.setVelocityY(0);
-                        loop.paused = false;
+                    if(zombie.health > 0){
+                        target = gameState.zombie1Stats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombie1Stats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombie1Stats.movement(scene,zombie,target);
+                        }
                     }
                     else {
-                        loop.paused = true;
-                        gameState.zombie1Stats.movement(scene,zombie,target);
+                        bLoop.destroy();
+                        zombie.destroy(); 
+                        loop.destroy();
                     }
-                    
                 },  
                 startAt: 0,
                 timeScale: 1,
@@ -264,30 +272,98 @@ let gameState = {
     },
     gatlingTowerStats:{
         cost: 20,
-        damage: 1,
+        damage: 2,
         health: 50,
-        attackRange: 250,
+        attackRange: 150,
         attackSpeed: 100,
         spawnTower: function(scene){
             var tower = gameState.buildings.create(scene.input.x,scene.input.y,'gatlingTower').setDepth(0).setImmovable();
             tower.health = gameState.gatlingTowerStats.health;
             gameState.gatlingTowerStats.action(scene,tower);
         },
+        findTarget: function(scene,building){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if(gameState.zombies.getChildren().length > 0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
         action: function(scene,building){
-            building.anims.play('gatlingTowerAction',true);
+            var target = gameState.gatlingTowerStats.findTarget(scene,building);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+            var loop = scene.time.addEvent({
+                delay: gameState.gatlingTowerStats.attackSpeed,
+                callback: ()=>{
+                    var bullet = gameState.bullets.create(building.x,building.y,'bullet');
+                    gameState.angle=Phaser.Math.Angle.Between(building.x,building.y,target.x,target.y);
+                    bullet.setRotation(gameState.angle); 
+                    scene.physics.moveTo(bullet,target.x +(Math.random()*6-10),target.y +(Math.random()*6-10),800);
+                    scene.physics.add.overlap(bullet, target,(bull, targ)=>{
+                        bull.destroy();
+                        targ.health -= gameState.gatlingTowerStats.damage;
+                    });
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
             var loop1 = scene.time.addEvent({
                 delay: 1,
                 callback: ()=>{
                     if(building.health <=0){
                         gameState.createExplosion(scene,building.x,building.y);
                         building.destroy();
+                        loop.destroy();
                         loop1.destroy();
+                    }
+                    else {
+                        gameState.gatlingTowerStats.findTarget(scene,building)
                     }
                 },  
                 startAt: 0,
                 timeScale: 1,
                 repeat: -1
-            }); 
+            });
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health > 0){
+                        target = gameState.gatlingTowerStats.findTarget(scene,building);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                        if(dist < gameState.gatlingTowerStats.attackRange){
+                            if(target.x < building.x){
+                                building.flipX = true;
+                            }else {
+                                building.flipX = false;
+                            }
+                            building.anims.play('gatlingTowerAction',true);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            building.anims.play('gatlingTowerIdle',true);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                        building.destroy(); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });  
         }
     }
 }

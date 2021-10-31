@@ -14,6 +14,7 @@ class MenuScene extends Phaser.Scene {
         this.load.image('startButton','images/startButton.png');
     }
     create() {
+            
         console.log(save,gameState);
         //character Animations
         this.anims.create({
@@ -58,7 +59,7 @@ class MenuScene extends Phaser.Scene {
         this.anims.create({
             key: 'gatlingTowerIdle',
             frameRate: 1,
-            frames:this.anims.generateFrameNames('galtingTower',{start: 0,end: 0})
+            frames:this.anims.generateFrameNames('gatlingTower',{start: 0,end: 0})
         });
         this.anims.create({
             key: 'gatlingTowerAction',
