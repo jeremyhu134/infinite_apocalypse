@@ -14,8 +14,7 @@ class MenuScene extends Phaser.Scene {
         this.load.image('startButton','images/startButton.png');
     }
     create() {
-        gameState.money = 200;
-        gameState.characterStats.health = 100;
+        console.log(save,gameState);
         //character Animations
         this.anims.create({
             key: 'characterIdle',

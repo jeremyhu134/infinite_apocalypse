@@ -23,10 +23,12 @@ const config = {
 const game = new Phaser.Game(config);
 
 let gameState = {
+    money : 200,
     characterStats: {
         speed : 200,
         health: 100
     },
+    
     chracterControls : function(scene){
         if(gameState.characterStats.health > 0){
             gameState.character.body.checkWorldBounds();
@@ -57,12 +59,23 @@ let gameState = {
             else {
                 gameState.character.setVelocityX(0);
             }
+            
         }
         else {
             gameState.character.destroy();
             scene.physics.pause();
+            scene.time.addEvent({
+                delay: 3000,
+                callback: ()=>{
+                    scene.scene.stop('ArenaScene');
+                    scene.scene.start('MenuScene');
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
         }
     },
+    
     updateMoney:function(){
         gameState.moneyText.setText(`${gameState.money}`);
     },
@@ -254,3 +267,5 @@ let gameState = {
         attackSpeed: 1000,
     }
 }
+
+let save = gameState
