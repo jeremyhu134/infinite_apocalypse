@@ -5,8 +5,8 @@ class MenuScene extends Phaser.Scene {
     preload(){
         this.load.spritesheet('character','images/character.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('zombie1','images/zombie1.png',{frameWidth: 32,frameHeight:32.1});
-        this.load.spritesheet('gatlingTower','images/gatlingTower.png',{frameWidth: 60,frameHeight:55});
         this.load.spritesheet('factory','images/factory.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('gatlingTower','images/gatlingTower.png',{frameWidth: 40,frameHeight:40});
         this.load.spritesheet('buildingExplosion','images/buildingExplosion.png',{frameWidth: 75,frameHeight:75});
         this.load.image('bullet','images/bullet.png');
         this.load.image('title','images/title.png');
@@ -57,19 +57,14 @@ class MenuScene extends Phaser.Scene {
         });
         this.anims.create({
             key: 'gatlingTowerIdle',
-            frameRate: 13,
+            frameRate: 1,
             frames:this.anims.generateFrameNames('galtingTower',{start: 0,end: 0})
         });
         this.anims.create({
-            key: 'gatlingTowerBuild',
-            frameRate: 16,
-            frames:this.anims.generateFrameNames('galtingTower',{start: 1,end: 6})
-        });
-        this.anims.create({
             key: 'gatlingTowerAction',
-            frameRate: 6,
+            frameRate: 12,
             repeat: -1,
-            frames:this.anims.generateFrameNames('galtingTower',{start: 7,end: 8})
+            frames:this.anims.generateFrameNames('gatlingTower',{start: 1,end: 2})
         });
         this.anims.create({
             key: 'factoryIdle',

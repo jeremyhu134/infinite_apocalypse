@@ -108,6 +108,9 @@ let gameState = {
             else if(gameState.keys.ONE.isDown && gameState.blueprint.active == false){
                 gameState.blueprint.create(scene,'factory',gameState.factoryStats);
             }
+            else if(gameState.keys.TWO.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'gatlingTower',gameState.gatlingTowerStats);
+            }
         }
     },
     
@@ -260,11 +263,32 @@ let gameState = {
         }
     },
     gatlingTowerStats:{
-        damage: 25,
-        health: 25,
-        attackRange: 50,
-        sightRange: 200,
-        attackSpeed: 1000,
+        cost: 20,
+        damage: 1,
+        health: 50,
+        attackRange: 250,
+        attackSpeed: 100,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'gatlingTower').setDepth(0).setImmovable();
+            tower.health = gameState.gatlingTowerStats.health;
+            gameState.gatlingTowerStats.action(scene,tower);
+        },
+        action: function(scene,building){
+            building.anims.play('gatlingTowerAction',true);
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop1.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
     }
 }
 
