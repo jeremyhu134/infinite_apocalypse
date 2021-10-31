@@ -24,6 +24,7 @@ const game = new Phaser.Game(config);
 
 let gameState = {
     money : 200,
+    wave: 1,
     characterStats: {
         speed : 200,
         health: 100
@@ -92,7 +93,7 @@ let gameState = {
         },
         create: function(scene,towerSprite,towerStats){
             gameState.blueprint.active = true;
-            gameState.blueprintSprite = scene.physics.add.sprite(scene.input.x,scene.input.y,`${towerSprite}`).setInteractive();
+            gameState.blueprintSprite = scene.physics.add.sprite(scene.input.x,scene.input.y,`${towerSprite}`).setInteractive().setDepth(1);
             gameState.blueprint.building = towerStats;
             gameState.blueprint.button = gameState.blueprintSprite.on('pointerdown', function(pointer){
                 if(gameState.money>= towerStats.cost){
@@ -111,6 +112,9 @@ let gameState = {
             }
             else if(gameState.keys.TWO.isDown && gameState.blueprint.active == false){
                 gameState.blueprint.create(scene,'gatlingTower',gameState.gatlingTowerStats);
+            }
+            else if(gameState.keys.THREE.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'woodWall',gameState.woodWallStats);
             }
         }
     },
@@ -235,10 +239,19 @@ let gameState = {
         attackRange: 0,
         sightRange: 0,
         attackSpeed: 0,
+        moneyProduce: 20,
+        count: 0,
+        maxCount: 20,
         spawnTower: function(scene){
-            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'factory').setDepth(0).setImmovable();
-            tower.health = gameState.factoryStats.health;
-            gameState.factoryStats.action(scene,tower);
+            if(gameState.factoryStats.count < 20){
+                gameState.factoryStats.count ++;
+                var tower = gameState.buildings.create(scene.input.x,scene.input.y,'factory').setDepth(0).setImmovable();
+                tower.health = gameState.factoryStats.health;
+                gameState.factoryStats.action(scene,tower);
+            }else {
+                gameState.money += 200;
+                gameState.updateMoney();
+            }
         },
         action: function(scene,building){
             building.anims.play('factoryAction',true);
@@ -246,7 +259,7 @@ let gameState = {
                 delay: 5000,
                 callback: ()=>{
                     if(building.health >0){
-                        gameState.money += 10;
+                        gameState.money += gameState.factoryStats.moneyProduce;
                         gameState.updateMoney();
                     }
                 },  
@@ -271,11 +284,11 @@ let gameState = {
         }
     },
     gatlingTowerStats:{
-        cost: 20,
-        damage: 2,
-        health: 50,
+        cost: 50,
+        damage: 10,
+        health: 25,
         attackRange: 150,
-        attackSpeed: 100,
+        attackSpeed: 200,
         spawnTower: function(scene){
             var tower = gameState.buildings.create(scene.input.x,scene.input.y,'gatlingTower').setDepth(0).setImmovable();
             tower.health = gameState.gatlingTowerStats.health;
@@ -306,7 +319,16 @@ let gameState = {
                     gameState.angle=Phaser.Math.Angle.Between(building.x,building.y,target.x,target.y);
                     bullet.setRotation(gameState.angle); 
                     scene.physics.moveTo(bullet,target.x +(Math.random()*6-10),target.y +(Math.random()*6-10),800);
-                    scene.physics.add.overlap(bullet, target,(bull, targ)=>{
+                    var bulletLoop = scene.time.addEvent({
+                        delay: 8000,
+                        callback: ()=>{
+                            bullet.destroy();
+                        },  
+                        startAt: 0,
+                        timeScale: 1
+                    });
+                    scene.physics.add.overlap(bullet, gameState.zombies,(bull, targ)=>{
+                        bulletLoop.destroy();
                         bull.destroy();
                         targ.health -= gameState.gatlingTowerStats.damage;
                     });
@@ -364,6 +386,32 @@ let gameState = {
                 timeScale: 1,
                 repeat: -1
             });  
+        }
+    },
+    
+    woodWallStats:{
+        cost: 50,
+        health: 50,
+        count: 0,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'woodWall').setDepth(0).setImmovable();
+            tower.health = gameState.woodWallStats.health;
+            gameState.woodWallStats.action(scene,tower);
+        },
+        action: function(scene,building){
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop1.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
         }
     }
 }

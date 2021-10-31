@@ -36,7 +36,7 @@ class ArenaScene extends Phaser.Scene {
         gameState.mouse=this.input.mousePointer;
         //this.input.mouse.disableContextMenu();
         gameState.cursors = this.input.keyboard.createCursorKeys();
-        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,ESC');
+        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,ESC');
         gameState.bullets = this.physics.add.group();
         
         gameState.buildings = this.physics.add.group();
@@ -45,30 +45,54 @@ class ArenaScene extends Phaser.Scene {
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
         this.time.addEvent({
-            delay: 30000,
+            delay: 1,
             callback: ()=>{
                 this.time.addEvent({
                     delay: 1,
                     callback: ()=>{
-                        gameState.zombie1Stats.spawnZombie(this);
+                        this.time.addEvent({
+                            delay: 1,
+                            callback: ()=>{
+                                gameState.zombie1Stats.spawnZombie(this);
+                            },  
+                            startAt: 0,
+                            timeScale: 1,
+                            repeat: gameState.spawnCount -1
+                        });
+                        if(gameState.wave<=5){
+                            gameState.spawnCount = 10;
+                        }
+                        else if (gameState.wave<=10){
+                            gameState.spawnCount = 25;
+                            gameState.zombie1Stats.speed = 30;
+                        }
+                        else if (gameState.wave<=15){
+                            gameState.spawnCount = 50;
+                            gameState.zombie1Stats.speed = 40;
+                        }
+                        else if (gameState.wave<=20){
+                            gameState.spawnCount = 75;
+                            gameState.zombie1Stats.speed = 50;
+                            gameState.zombie1Stats.health = 150;
+                        }
+                        else if (gameState.wave<=25){
+                            gameState.spawnCount = 100;
+                            gameState.zombie1Stats.speed = 60;
+                            gameState.zombie1Stats.health = 200;
+                        }
+                        else {
+                            gameState.spawnCount += 20;
+                            gameState.zombie1Stats.speed += 10;
+                            gameState.zombie1Stats.health += 25;
+                        }
+                        gameState.wave += 1;
                     },  
                     startAt: 0,
-                    timeScale: 1,
-                    repeat: gameState.spawnCount -1
-                });
-                if(gameState.spawnCount+1 <30){
-                    gameState.spawnCount += 5;
-                }
-                else if (gameState.spawnCount >=30 && gameState.spawnCount <50){
-                    gameState.zombie1Stats.speed += 5;
-                }
-                else {
-                    gameState.spawnCount += 5;
-                }
+                    timeScale: 1
+                }); 
             },  
             startAt: 0,
-            timeScale: 1,
-            repeat: -1
+            timeScale: 1
         }); 
         this.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(5);
         gameState.moneyText = this.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {

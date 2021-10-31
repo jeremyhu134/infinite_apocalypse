@@ -7,6 +7,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('zombie1','images/zombie1.png',{frameWidth: 32,frameHeight:32.1});
         this.load.spritesheet('factory','images/factory.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('gatlingTower','images/gatlingTower.png',{frameWidth: 40,frameHeight:40});
+        this.load.spritesheet('woodWall','images/woodWall.png',{frameWidth: 18,frameHeight:30});
         this.load.spritesheet('buildingExplosion','images/buildingExplosion.png',{frameWidth: 75,frameHeight:75});
         this.load.image('bullet','images/bullet.png');
         this.load.image('title','images/title.png');
