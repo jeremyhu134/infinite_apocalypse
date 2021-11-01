@@ -44,21 +44,26 @@ class ArenaScene extends Phaser.Scene {
         
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
+        
         this.time.addEvent({
             delay: 30000,
             callback: ()=>{
                 this.time.addEvent({
-                    delay: 30000,
+                    delay: 45000,
                     callback: ()=>{
+                        gameState.waveText.setText(`${gameState.wave}`);
                         this.time.addEvent({
-                            delay: 1,
+                            delay: 100,
                             callback: ()=>{
-                                gameState.zombie1Stats.spawnZombie(this);
+                                gameState.zombie1Stats.spawnZombie(this,Math.random()*11,Math.random()*window.innerHeight-32);
                             },  
                             startAt: 0,
                             timeScale: 1,
                             repeat: gameState.spawnCount -1
                         });
+                        if(gameState.wave%10 == 0){
+                            gameState.zombieWizardStats.spawnZombie(this);
+                        }
                         if(gameState.wave<=5){
                             gameState.spawnCount = 10;
                         }
@@ -89,19 +94,13 @@ class ArenaScene extends Phaser.Scene {
                     },  
                     startAt: 0,
                     timeScale: 1,
-		    repeat: -1
+                    repeat: -1
                 }); 
             },  
             startAt: 0,
             timeScale: 1
         }); 
-        this.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(window.innerHeight+3);
-        gameState.moneyText = this.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {
-            fill: '#OOOOOO', 
-            fontSize: '30px',
-            fontFamily: 'Qahiri',
-            strokeThickness: 10,
-        }).setDepth(window.innerHeight+3);
+        gameState.createIcons(this);
         this.physics.add.collider(gameState.character, gameState.buildings);
         //this.physics.add.overlap(gameState.blueprint, gameState.buildings)
     }
