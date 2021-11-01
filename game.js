@@ -320,7 +320,7 @@ let gameState = {
                     bullet.setRotation(gameState.angle); 
                     scene.physics.moveTo(bullet,target.x +(Math.random()*6-10),target.y +(Math.random()*6-10),800);
                     var bulletLoop = scene.time.addEvent({
-                        delay: 8000,
+                        delay: 3000,
                         callback: ()=>{
                             bullet.destroy();
                         },  
