@@ -128,7 +128,7 @@ let gameState = {
         sightRange: 200,
         attackSpeed: 1000,
         spawnZombie: function(scene){
-            var zombie = gameState.zombies.create(Math.random()*11,Math.random()*window.innerHeight-32,`zombie1`).setDepth(1);
+            var zombie = gameState.zombies.create(Math.random()*11,Math.random()*window.innerHeight-32,`zombie1`).setDepth(window.innerHeight+1);
             zombie.anims.play(`zombie1Spawn`);
             scene.time.addEvent({
                 delay: 1310,
@@ -220,7 +220,7 @@ let gameState = {
     },
     
     createExplosion: function(scene,x,y){
-        var explode = scene.physics.add.sprite(x,y,`buildingExplosion`);
+        var explode = scene.physics.add.sprite(x,y,`buildingExplosion`).setDepth(window.innerHeight+2);
         explode.anims.play('explode',true);
         scene.time.addEvent({
             delay: 1000,
@@ -245,7 +245,7 @@ let gameState = {
         spawnTower: function(scene){
             if(gameState.factoryStats.count < 20){
                 gameState.factoryStats.count ++;
-                var tower = gameState.buildings.create(scene.input.x,scene.input.y,'factory').setDepth(0).setImmovable();
+                var tower = gameState.buildings.create(scene.input.x,scene.input.y,'factory').setDepth(scene.input.y).setImmovable();
                 tower.health = gameState.factoryStats.health;
                 gameState.factoryStats.action(scene,tower);
             }else {
@@ -290,7 +290,7 @@ let gameState = {
         attackRange: 150,
         attackSpeed: 200,
         spawnTower: function(scene){
-            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'gatlingTower').setDepth(0).setImmovable();
+            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'gatlingTower').setDepth(scene.input.y).setImmovable();
             tower.health = gameState.gatlingTowerStats.health;
             gameState.gatlingTowerStats.action(scene,tower);
         },
@@ -394,7 +394,7 @@ let gameState = {
         health: 50,
         count: 0,
         spawnTower: function(scene){
-            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'woodWall').setDepth(0).setImmovable();
+            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'woodWall').setDepth(scene.input.y).setImmovable();
             tower.health = gameState.woodWallStats.health;
             gameState.woodWallStats.action(scene,tower);
         },
