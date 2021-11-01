@@ -45,10 +45,10 @@ class ArenaScene extends Phaser.Scene {
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
         this.time.addEvent({
-            delay: 1,
+            delay: 30000,
             callback: ()=>{
                 this.time.addEvent({
-                    delay: 1,
+                    delay: 30000,
                     callback: ()=>{
                         this.time.addEvent({
                             delay: 1,
@@ -88,7 +88,8 @@ class ArenaScene extends Phaser.Scene {
                         gameState.wave += 1;
                     },  
                     startAt: 0,
-                    timeScale: 1
+                    timeScale: 1,
+		    repeat: -1
                 }); 
             },  
             startAt: 0,
