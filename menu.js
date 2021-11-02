@@ -81,7 +81,7 @@ class MenuScene extends Phaser.Scene {
         this.anims.create({
             key: 'zombieWizardDeath',
             frameRate: 10,
-            frames:this.anims.generateFrameNames('zombieWizardDeath',{start: 29,end: 33})
+            frames:this.anims.generateFrameNames('zombieWizard',{start: 29,end: 33})
         });
         
         
