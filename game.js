@@ -123,18 +123,18 @@ let gameState = {
             gameState.blueprint.building = towerStats;
             gameState.blueprint.button = gameState.blueprintSprite.on('pointerdown', function(pointer){
                 if(gameState.money >= towerStats.cost && gameState.blueprint.overLap >10){
-                    gameState.blueprint.building.spawnTower(gameState.globalScene);
                     gameState.money -= towerStats.cost;
+                    gameState.blueprint.building.spawnTower(gameState.globalScene);
                     gameState.updateMoney();
                 }
             });
-            gameState.blueprintOverlapCheck = scene.physics.add.collider(gameState.blueprintSprite, gameState.buildings,()=>{
+            gameState.blueprintOverlapCheck = scene.physics.add.overlap(gameState.blueprintSprite, gameState.buildings,()=>{
                 gameState.blueprint.overLap = 0;
             });
-            gameState.blueprintOverlapCheck1 = scene.physics.add.collider(gameState.blueprintSprite, gameState.zombies,()=>{
+            gameState.blueprintOverlapCheck1 = scene.physics.add.overlap(gameState.blueprintSprite, gameState.zombies,()=>{
                 gameState.blueprint.overLap = 0;
             });
-            gameState.blueprintOverlapCheck2 = scene.physics.add.collider(gameState.blueprintSprite, gameState.character,()=>{
+            gameState.blueprintOverlapCheck2 = scene.physics.add.overlap(gameState.blueprintSprite, gameState.character,()=>{
                 gameState.blueprint.overLap = 0;
             });
         },
@@ -155,12 +155,17 @@ let gameState = {
                 gameState.blueprint.create(scene,'factory',gameState.factoryStats);
             }
             else if(gameState.keys.TWO.isDown && gameState.blueprint.active == false){
-                gameState.blueprint.create(scene,'gatlingTower',gameState.gatlingTowerStats);
-            }
-            else if(gameState.keys.THREE.isDown && gameState.blueprint.active == false){
                 gameState.blueprint.create(scene,'woodWall',gameState.woodWallStats);
                 gameState.blueprintSprite.body.offset.y = 15;
                 gameState.blueprintSprite.body.height = 15;
+            }
+            else if(gameState.keys.THREE.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'gatlingTower',gameState.gatlingTowerStats);
+            }
+            else if(gameState.keys.FOUR.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'electroTower',gameState.electroTowerStats);
+                gameState.blueprintSprite.body.offset.y = 30;
+                gameState.blueprintSprite.body.height = 40;
             }
         }
     },
@@ -274,9 +279,121 @@ let gameState = {
         }
     },
     
+    zombieKingStats:{
+        name: "Zombie King",
+        speed: 10,
+        health: 10000,
+        damage: 200,
+        attackRange: 100,
+        attackSpeed: 3000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieKing`).setDepth(0);
+            zombie.setDepth(zombie.y);
+            zombie.body.offset.y = 100;
+            zombie.body.height = 100;
+            zombie.anims.play(`zombieKingSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieKingStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieKingStats.speed);
+            zombie.anims.play('zombieKingWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target){
+            if(target == gameState.character){
+                gameState.characterStats.health -= gameState.zombieKingStats.damage;
+            }
+            else {
+                target.health -= gameState.zombieKingStats.damage;
+            }
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieKingStats.health;
+            zombie.setDepth(zombie.y);
+            var target = gameState.zombieKingStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieKingStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieKingStats.attack(scene,target);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieKingStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieKingStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieKingStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombie1Death',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
     zombieWizardStats:{
         name: "Zombie Wizard",
-        speed: 10,
+        speed: 15,
         health: 1000,
         damage: 20,
         attackRange: 250,
@@ -331,7 +448,7 @@ let gameState = {
             var dist;
             var closest = 10000;
             var target = gameState.character;
-            if( gameState.buildings.getChildren().length > 0){
+            if( gameState.buildings.getChildren().length >0){
                 for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
                     dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
                     if(dist<closest){
@@ -402,7 +519,7 @@ let gameState = {
                         scene.time.addEvent({
                             delay: 400,
                             callback: ()=>{
-                                zombie.destroy(); 
+                            zombie.destroy(); 
                             },  
                             startAt: 0,
                             timeScale: 1
@@ -432,13 +549,13 @@ let gameState = {
     },
     
     factoryStats:{
-        cost: 200,
+        cost: 100,
         damage: 0,
         health: 200,
         attackRange: 0,
         sightRange: 0,
         attackSpeed: 0,
-        moneyProduce: 20,
+        moneyProduce: 10,
         count: 0,
         maxCount: 20,
         spawnTower: function(scene){
@@ -447,8 +564,9 @@ let gameState = {
                 var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'factory').setDepth(scene.input.y).setImmovable();
                 tower.health = gameState.factoryStats.health;
                 gameState.factoryStats.action(scene,tower);
+                gameState.factoryStats.cost = (gameState.factoryStats.count+1)*100;
             }else {
-                gameState.money += 200;
+                gameState.money += gameState.factoryStats.cost;
                 gameState.updateMoney();
             }
         },
@@ -474,6 +592,7 @@ let gameState = {
                         building.destroy();
                         loop.destroy();
                         loop1.destroy();
+                        gameState.factoryStats.count -= 1;
                     }
                 },  
                 startAt: 0,
@@ -572,6 +691,119 @@ let gameState = {
                         else {
                             loop.paused = true;
                             building.anims.play('gatlingTowerIdle',true);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                        building.destroy(); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });  
+        }
+    },
+    
+    
+    electroTowerStats:{
+        cost: 150,
+        damage: 25,
+        health: 100,
+        attackRange: 200,
+        attackSpeed: 3000,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'electroTower').setDepth(scene.input.y).setImmovable();
+            tower.body.offset.y = 30;
+            tower.body.height = 40;
+            tower.health = gameState.electroTowerStats.health;
+            gameState.electroTowerStats.action(scene,tower);
+        },
+        
+        createElectricWave: function(scene,x,y){
+            var wave = scene.physics.add.sprite(x,y,`electricWave`);
+            wave.anims.play('electricWaveAction',true);
+            scene.time.addEvent({
+                delay: 333,
+                callback: ()=>{
+                    wave.destroy();
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        findTarget: function(scene,building){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if(gameState.zombies.getChildren().length > 0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
+        action: function(scene,building){
+            var target = gameState.electroTowerStats.findTarget(scene,building);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+            var loop = scene.time.addEvent({
+                delay: gameState.electroTowerStats.attackSpeed,
+                callback: ()=>{
+                    gameState.electroTowerStats.createElectricWave(scene,building.x,building.y);
+                    var closest = 10000;
+                    for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                        dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                        if(dist<gameState.electroTowerStats.attackRange){
+                            gameState.zombies.getChildren()[i].health -= gameState.electroTowerStats.damage;
+                        }
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                    }
+                    else {
+                        gameState.electroTowerStats.findTarget(scene,building)
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health > 0){
+                        target = gameState.electroTowerStats.findTarget(scene,building);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                        if(dist < gameState.electroTowerStats.attackRange){
+                            if(target.x < building.x){
+                                building.flipX = true;
+                            }else {
+                                building.flipX = false;
+                            }
+                            building.anims.play('electroTowerAction',true);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            building.anims.play('electroTowerIdle',true);
                         }
                     }
                     else {

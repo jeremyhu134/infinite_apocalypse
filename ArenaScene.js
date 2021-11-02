@@ -38,7 +38,7 @@ class ArenaScene extends Phaser.Scene {
         gameState.mouse=this.input.mousePointer;
         //this.input.mouse.disableContextMenu();
         gameState.cursors = this.input.keyboard.createCursorKeys();
-        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,ESC');
+        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,ESC');
         gameState.bullets = this.physics.add.group();
         
         gameState.buildings = this.physics.add.group();
@@ -62,8 +62,11 @@ class ArenaScene extends Phaser.Scene {
                             timeScale: 1,
                             repeat: gameState.spawnCount -1
                         });
-                        if(gameState.wave%10 == 0){
+                        if(gameState.wave%10 == 0 && gameState.wave%50 != 0){
                             gameState.zombieWizardStats.spawnZombie(this);
+                        }
+                        if(gameState.wave%50 == 0){
+                            gameState.zombieKingStats.spawnZombie(this);
                         }
                         if(gameState.wave<=5){
                             gameState.spawnCount = 10;
@@ -73,23 +76,23 @@ class ArenaScene extends Phaser.Scene {
                             gameState.zombie1Stats.speed = 30;
                         }
                         else if (gameState.wave<=15){
-                            gameState.spawnCount = 50;
-                            gameState.zombie1Stats.speed = 40;
+                            gameState.spawnCount = 35;
+                            gameState.zombie1Stats.speed = 35;
                         }
                         else if (gameState.wave<=20){
-                            gameState.spawnCount = 75;
-                            gameState.zombie1Stats.speed = 50;
-                            gameState.zombie1Stats.health = 150;
+                            gameState.spawnCount = 50;
+                            gameState.zombie1Stats.speed = 45;
+                            gameState.zombie1Stats.health = 125;
                         }
                         else if (gameState.wave<=25){
-                            gameState.spawnCount = 100;
-                            gameState.zombie1Stats.speed = 60;
-                            gameState.zombie1Stats.health = 200;
+                            gameState.spawnCount = 75;
+                            gameState.zombie1Stats.speed = 50;
+                            gameState.zombie1Stats.health = 125;
                         }
                         else {
-                            gameState.spawnCount += 20;
-                            gameState.zombie1Stats.speed += 10;
-                            gameState.zombie1Stats.health += 25;
+                            gameState.spawnCount += 2;
+                            gameState.zombie1Stats.speed += 5;
+                            gameState.zombie1Stats.health += 5;
                         }
                         gameState.wave += 1;
                     },  
