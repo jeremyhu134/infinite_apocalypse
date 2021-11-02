@@ -331,7 +331,7 @@ let gameState = {
             var dist;
             var closest = 10000;
             var target = gameState.character;
-            if( gameState.buildings.getChildren().length >0){
+            if( gameState.buildings.getChildren().length > 0){
                 for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
                     dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
                     if(dist<closest){
@@ -396,13 +396,13 @@ let gameState = {
                         bLoop.destroy();
                         loop.destroy();
                         spawnLoop.destroy();
-                        zombie.anims.play('zombieWizardDeath',true);
+                        //zombie.anims.play('zombieWizardDeath',true);
                         zombie.setVelocityX(0);
                         zombie.setVelocityY(0);
                         scene.time.addEvent({
                             delay: 400,
                             callback: ()=>{
-                            zombie.destroy(); 
+                                zombie.destroy(); 
                             },  
                             startAt: 0,
                             timeScale: 1
