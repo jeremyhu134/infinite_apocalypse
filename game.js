@@ -396,7 +396,7 @@ let gameState = {
                         bLoop.destroy();
                         loop.destroy();
                         spawnLoop.destroy();
-                        //zombie.anims.play('zombieWizardDeath',true);
+                        zombie.anims.play('zombieWizardDeath',true);
                         zombie.setVelocityX(0);
                         zombie.setVelocityY(0);
                         scene.time.addEvent({
