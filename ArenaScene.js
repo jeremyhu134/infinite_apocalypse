@@ -46,7 +46,6 @@ class ArenaScene extends Phaser.Scene {
         
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
-	gameState.zombieWizardStats.spawnZombie(this);
         this.time.addEvent({
             delay: 30000,
             callback: ()=>{
