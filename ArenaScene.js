@@ -27,6 +27,8 @@ class ArenaScene extends Phaser.Scene {
     create(){
         gameState.globalScene = this;
         gameState.character = this.physics.add.sprite(window.innerWidth/2-16,window.innerHeight/2+16,'character').setOrigin(0,0);
+        gameState.character.body.offset.y = 16;
+        gameState.character.body.height = 16;
         
         /*this.physics.add.collider(gameState.player, gameState.barriers,(hero,barrier)=>{
             
@@ -44,7 +46,6 @@ class ArenaScene extends Phaser.Scene {
         
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
-        
         this.time.addEvent({
             delay: 30000,
             callback: ()=>{
@@ -106,10 +107,6 @@ class ArenaScene extends Phaser.Scene {
     }
     update(){
         gameState.chracterControls(this,gameState.character,gameState.characterStats);
-        if(gameState.blueprint.active == true){
-            gameState.blueprintSprite.x = this.input.x;
-            gameState.blueprintSprite.y = this.input.y;
-        }
         gameState.blueprint.checkControls(this);
     }
 }

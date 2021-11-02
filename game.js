@@ -10,7 +10,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            enableBody: true,
+            enableBody: true
             //debug: true
         }
     },
@@ -26,7 +26,7 @@ let gameState = {
     money : 200,
     wave: 1,
     characterStats: {
-        speed : 200,
+        speed : 150,
         health: 100
     },
     invisibleTarget : null,
@@ -34,6 +34,7 @@ let gameState = {
     chracterControls : function(scene){
         if(gameState.characterStats.health > 0){
             gameState.healthText.setText(`${gameState.characterStats.health}`);
+            gameState.character.depth = gameState.character.y+16;
             gameState.character.body.checkWorldBounds();
             if(gameState.character.body.velocity.x == 0){
                 gameState.character.anims.play('characterIdle',true);
@@ -110,6 +111,7 @@ let gameState = {
         active: false,
         button: null,
         building: null,
+        overLap: 1,
         toggleOff:function(blueprintSprite){
             gameState.blueprint.active = false;
             gameState.blueprintSprite.destroy();
@@ -120,16 +122,34 @@ let gameState = {
             gameState.blueprintSprite = scene.physics.add.sprite(scene.input.x,scene.input.y,`${towerSprite}`).setInteractive().setDepth(1);
             gameState.blueprint.building = towerStats;
             gameState.blueprint.button = gameState.blueprintSprite.on('pointerdown', function(pointer){
-                if(gameState.money>= towerStats.cost){
+                if(gameState.money >= towerStats.cost && gameState.blueprint.overLap >10){
                     gameState.blueprint.building.spawnTower(gameState.globalScene);
                     gameState.money -= towerStats.cost;
                     gameState.updateMoney();
                 }
             });
+            gameState.blueprintOverlapCheck = scene.physics.add.collider(gameState.blueprintSprite, gameState.buildings,()=>{
+                gameState.blueprint.overLap = 0;
+            });
+            gameState.blueprintOverlapCheck1 = scene.physics.add.collider(gameState.blueprintSprite, gameState.zombies,()=>{
+                gameState.blueprint.overLap = 0;
+            });
+            gameState.blueprintOverlapCheck2 = scene.physics.add.collider(gameState.blueprintSprite, gameState.character,()=>{
+                gameState.blueprint.overLap = 0;
+            });
         },
         checkControls: function (scene){
+            if(gameState.blueprint.active == true){
+                gameState.blueprint.overLap += 1;
+                gameState.blueprintSprite.x = scene.input.x;
+                gameState.blueprintSprite.y = scene.input.y;
+                //scene.physics.moveToObject(gameState.blueprintSprite,scene.input,60,100);
+            }
             if(gameState.keys.ESC.isDown && gameState.blueprint.active == true){
                 gameState.blueprint.toggleOff(gameState.blueprintSprite);
+                gameState.blueprintOverlapCheck.destroy();
+                gameState.blueprintOverlapCheck1.destroy();
+                gameState.blueprintOverlapCheck2.destroy();
             }
             else if(gameState.keys.ONE.isDown && gameState.blueprint.active == false){
                 gameState.blueprint.create(scene,'factory',gameState.factoryStats);
@@ -139,6 +159,8 @@ let gameState = {
             }
             else if(gameState.keys.THREE.isDown && gameState.blueprint.active == false){
                 gameState.blueprint.create(scene,'woodWall',gameState.woodWallStats);
+                gameState.blueprintSprite.body.offset.y = 15;
+                gameState.blueprintSprite.body.height = 15;
             }
         }
     },
@@ -422,7 +444,7 @@ let gameState = {
         spawnTower: function(scene){
             if(gameState.factoryStats.count < 20){
                 gameState.factoryStats.count ++;
-                var tower = gameState.buildings.create(scene.input.x,scene.input.y,'factory').setDepth(scene.input.y).setImmovable();
+                var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'factory').setDepth(scene.input.y).setImmovable();
                 tower.health = gameState.factoryStats.health;
                 gameState.factoryStats.action(scene,tower);
             }else {
@@ -467,7 +489,7 @@ let gameState = {
         attackRange: 150,
         attackSpeed: 200,
         spawnTower: function(scene){
-            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'gatlingTower').setDepth(scene.input.y).setImmovable();
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'gatlingTower').setDepth(scene.input.y).setImmovable();
             tower.health = gameState.gatlingTowerStats.health;
             gameState.gatlingTowerStats.action(scene,tower);
         },
@@ -571,7 +593,9 @@ let gameState = {
         health: 50,
         count: 0,
         spawnTower: function(scene){
-            var tower = gameState.buildings.create(scene.input.x,scene.input.y,'woodWall').setDepth(scene.input.y).setImmovable();
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'woodWall').setDepth(scene.input.y).setImmovable();
+            tower.body.offset.y = 15;
+            tower.body.height = 15;
             tower.health = gameState.woodWallStats.health;
             gameState.woodWallStats.action(scene,tower);
         },
