@@ -122,7 +122,7 @@ let gameState = {
             gameState.blueprintSprite = scene.physics.add.sprite(scene.input.x,scene.input.y,`${towerSprite}`).setInteractive().setDepth(1);
             gameState.blueprint.building = towerStats;
             gameState.blueprint.button = gameState.blueprintSprite.on('pointerdown', function(pointer){
-                if(gameState.money >= towerStats.cost && gameState.blueprint.overLap >10){
+                if(gameState.money >= towerStats.cost && gameState.blueprint.overLap >5){
                     gameState.money -= towerStats.cost;
                     gameState.blueprint.building.spawnTower(gameState.globalScene);
                     gameState.updateMoney();
@@ -371,7 +371,7 @@ let gameState = {
                     else {
                         bLoop.destroy();
                         loop.destroy();
-                        zombie.anims.play('zombie1Death',true);
+                        zombie.anims.play('zombieKingDeath',true);
                         zombie.setVelocityX(0);
                         zombie.setVelocityY(0);
                         scene.time.addEvent({
