@@ -802,9 +802,9 @@ let gameState = {
         name: "Zombie Muskateer",
         speed: 30,
         health: 75,
-        damage: 10,
+        damage: 5,
         attackRange: 150,
-        attackSpeed: 1000,
+        attackSpeed: 2000,
         spawnZombie: function(scene,x,y){
             var zombie = gameState.zombies.create(x,y,`zombieMuskateer`).setDepth(1);
             zombie.anims.play(`zombieMuskateerSpawn`);
@@ -996,7 +996,7 @@ let gameState = {
         cost: 50,
         damage: 10,
         health: 50,
-        attackRange: 150,
+        attackRange: 170,
         attackSpeed: 200,
         spawnTower: function(scene){
             var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'gatlingTower').setDepth(scene.input.y).setImmovable();
