@@ -26,7 +26,7 @@ class ArenaScene extends Phaser.Scene {
     }
     create(){
         gameState.globalScene = this;
-        gameState.character = this.physics.add.sprite(window.innerWidth/2-16,window.innerHeight/2+16,'character').setOrigin(0,0);
+        gameState.character = this.physics.add.sprite(window.innerWidth/2-16,window.innerHeight/2+16,'character');
         gameState.character.body.offset.y = 16;
         gameState.character.body.height = 16;
         
@@ -38,7 +38,7 @@ class ArenaScene extends Phaser.Scene {
         gameState.mouse=this.input.mousePointer;
         //this.input.mouse.disableContextMenu();
         gameState.cursors = this.input.keyboard.createCursorKeys();
-        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,ESC');
+        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,FIVE,ESC');
         gameState.bullets = this.physics.add.group();
         
         gameState.buildings = this.physics.add.group();
@@ -46,64 +46,7 @@ class ArenaScene extends Phaser.Scene {
         
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
-        this.time.addEvent({
-            delay: 30000,
-            callback: ()=>{
-                this.time.addEvent({
-                    delay: 45000,
-                    callback: ()=>{
-                        gameState.waveText.setText(`${gameState.wave}`);
-                        this.time.addEvent({
-                            delay: 100,
-                            callback: ()=>{
-                                gameState.zombie1Stats.spawnZombie(this,Math.random()*11,Math.random()*window.innerHeight-32);
-                            },  
-                            startAt: 0,
-                            timeScale: 1,
-                            repeat: gameState.spawnCount -1
-                        });
-                        if(gameState.wave%10 == 0 && gameState.wave%50 != 0){
-                            gameState.zombieWizardStats.spawnZombie(this);
-                        }
-                        if(gameState.wave%50 == 0){
-                            gameState.zombieKingStats.spawnZombie(this);
-                        }
-                        if(gameState.wave<=5){
-                            gameState.spawnCount = 10;
-                        }
-                        else if (gameState.wave<=10){
-                            gameState.spawnCount = 25;
-                            gameState.zombie1Stats.speed = 30;
-                        }
-                        else if (gameState.wave<=15){
-                            gameState.spawnCount = 35;
-                            gameState.zombie1Stats.speed = 35;
-                        }
-                        else if (gameState.wave<=20){
-                            gameState.spawnCount = 50;
-                            gameState.zombie1Stats.speed = 45;
-                            gameState.zombie1Stats.health = 125;
-                        }
-                        else if (gameState.wave<=25){
-                            gameState.spawnCount = 75;
-                            gameState.zombie1Stats.speed = 50;
-                            gameState.zombie1Stats.health = 125;
-                        }
-                        else {
-                            gameState.spawnCount += 2;
-                            gameState.zombie1Stats.speed += 5;
-                            gameState.zombie1Stats.health += 5;
-                        }
-                        gameState.wave += 1;
-                    },  
-                    startAt: 0,
-                    timeScale: 1,
-                    repeat: -1
-                }); 
-            },  
-            startAt: 0,
-            timeScale: 1
-        }); 
+        gameState.commenceWaves(this);
         gameState.createIcons(this);
         this.physics.add.collider(gameState.character, gameState.buildings);
         //this.physics.add.overlap(gameState.blueprint, gameState.buildings)

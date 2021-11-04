@@ -23,10 +23,10 @@ const config = {
 const game = new Phaser.Game(config);
 
 let gameState = {
-    money : 200,
-    wave: 1,
+    money : 100,
+    wave: 0,
     characterStats: {
-        speed : 150,
+        speed : 100,
         health: 100
     },
     invisibleTarget : null,
@@ -83,6 +83,7 @@ let gameState = {
     updateMoney:function(){
         gameState.moneyText.setText(`${gameState.money}`);
     },
+    
     createIcons: function (scene){
         scene.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(window.innerHeight+3);
         gameState.moneyText = scene.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {
@@ -167,7 +168,167 @@ let gameState = {
                 gameState.blueprintSprite.body.offset.y = 30;
                 gameState.blueprintSprite.body.height = 40;
             }
+            else if(gameState.keys.FIVE.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'barracks',gameState.barrackStats);
+            }
         }
+    },
+    
+    
+    spawnZombies: function(scene,stats,count){
+        scene.time.addEvent({
+            delay: 100,
+            callback: ()=>{
+                stats.spawnZombie(scene,Math.random()*25+50,Math.random()*window.innerHeight);
+            },  
+            startAt: 0,
+            timeScale: 1,
+            repeat: count-1
+        });
+    },
+    commenceWaves: function (scene){
+        scene.time.addEvent({
+            delay: 30000,
+            callback: ()=>{
+                scene.time.addEvent({
+                    delay: 45000,
+                    callback: ()=>{
+                        gameState.wave += 1;
+                        gameState.waveText.setText(`${gameState.wave}`);
+                        
+                        if(gameState.wave >= 1 && gameState.wave <= 5){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,5);
+                        }
+                        else if(gameState.wave == 6){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,10);
+                        }
+                        else if(gameState.wave >= 7 && gameState.wave <= 9){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,10);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,5);
+                        }
+                        else if(gameState.wave == 10){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,30);
+                        }
+                        else if(gameState.wave >= 11 && gameState.wave <= 14){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,15);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,15);
+                        }
+                        else if(gameState.wave == 15){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,50);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,0);
+                        }
+                        else if(gameState.wave >= 16 && gameState.wave <= 19){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 25;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,20);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,10);
+                        }
+                        else if(gameState.wave == 20){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,30);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,5);
+                            gameState.spawnZombies(scene,gameState.zombieWizardStats,1);
+                        }
+                        else if(gameState.wave == 21){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,10);
+                            gameState.spawnZombies(scene,gameState.zombieBomberStats,10);
+                        }
+                        else if(gameState.wave >= 22 && gameState.wave <= 24){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,30);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,20);
+                            gameState.spawnZombies(scene,gameState.zombieBomberStats,5);
+                        }
+                        else if(gameState.wave == 25){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,50);
+                        }
+                        else if(gameState.wave >= 26 && gameState.wave <= 29){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,30);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,20);
+                            gameState.spawnZombies(scene,gameState.zombieBomberStats,5);
+                        }
+                        else if(gameState.wave == 30){
+                            gameState.zombie1Stats.attackSpeed = 1000;
+                            gameState.zombie1Stats.damage = 5;
+                            gameState.zombie1Stats.speed = 20;
+                            gameState.zombie1Stats.health = 100;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,10);
+                            gameState.spawnZombies(scene,gameState.zombieWizardStats,3);
+                        }
+                        else if(gameState.wave == 50){
+                            gameState.spawnZombies(scene,gameState.zombieWizardStats,5);
+                            gameState.spawnZombies(scene,gameState.zombieKingStats,1);
+                        }
+                        else if(gameState.wave == 100){
+                            gameState.spawnZombies(scene,gameState.zombieWizardStats,10);
+                            gameState.spawnZombies(scene,gameState.zombieKingStats,3);
+                        }
+                        else {
+                            if(gameState.zombie1Stats.attackSpeed > 500){
+                                gameState.zombie1Stats.attackSpeed -= 10;
+                            }   
+                            gameState.zombie1Stats.damage += 2;
+                            gameState.zombie1Stats.speed += 5;
+                            gameState.zombie1Stats.health += 2;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,30);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,20);
+                            gameState.spawnZombies(scene,gameState.zombieBomberStats,5);
+                        }
+                        
+                        
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+            },  
+            startAt: 0,
+            timeScale: 1
+        }); 
     },
     
     zombie1Stats:{
@@ -279,11 +440,115 @@ let gameState = {
         }
     },
     
+    zombieBomberStats:{
+        name: "Zombie Bomber",
+        speed: 125,
+        health: 40,
+        damage: 100,
+        attackRange: 10,
+        attackSpeed: 1,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieBomber`).setDepth(1);
+            zombie.anims.play(`zombieBomberSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieBomberStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieBomberStats.speed);
+            zombie.anims.play('zombieBomberWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target,zombie){
+            for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                var dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                if(dist<50){
+                    gameState.buildings.getChildren()[i].health -= gameState.zombieBomberStats.damage;
+                }
+            }
+            var dist = Phaser.Math.Distance.BetweenPoints(gameState.character, zombie);
+            if(dist<50){
+                gameState.characterStats.health -= gameState.zombieBomberStats.damage;
+            }
+            zombie.health = 0;
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieBomberStats.health;
+            var target = gameState.zombieBomberStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieBomberStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieBomberStats.attack(scene,target,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieBomberStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieBomberStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieBomberStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        gameState.createExplosion(scene, zombie.x,zombie.y);
+                        zombie.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
     zombieKingStats:{
         name: "Zombie King",
         speed: 10,
         health: 10000,
-        damage: 200,
+        damage: 500,
         attackRange: 100,
         attackSpeed: 3000,
         spawnZombie: function(scene,x,y){
@@ -393,12 +658,12 @@ let gameState = {
     
     zombieWizardStats:{
         name: "Zombie Wizard",
-        speed: 15,
+        speed: 25,
         health: 1000,
         damage: 20,
-        attackRange: 250,
-        attackSpeed: 3000,
-        spawnZombie: function(scene){
+        attackRange: 200,
+        attackSpeed: 1500,
+        spawnZombie: function(scene,x,y){
             var zombie = gameState.zombies.create(Math.random()*11,Math.random()*window.innerHeight-32,`zombieWizard`).setDepth(1);
             zombie.anims.play(`zombieWizardSpawn`);
             scene.time.addEvent({
@@ -532,7 +797,132 @@ let gameState = {
             }); 
         }
     },
-    
+        
+    zombieMuskateerStats:{
+        name: "Zombie Muskateer",
+        speed: 30,
+        health: 75,
+        damage: 10,
+        attackRange: 150,
+        attackSpeed: 1000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieMuskateer`).setDepth(1);
+            zombie.anims.play(`zombieMuskateerSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieMuskateerStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieMuskateerStats.speed);
+            zombie.anims.play('zombieMuskateerWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target,zombie){
+            var bullet = gameState.bullets.create(zombie.x,zombie.y,'bullet');
+            gameState.angle=Phaser.Math.Angle.Between(zombie.x,zombie.y,target.x,target.y);
+            bullet.setRotation(gameState.angle); 
+            scene.physics.moveTo(bullet,target.x,target.y,300);
+            var bulletLoop = scene.time.addEvent({
+                delay: 10000,
+                callback: ()=>{
+                    bullet.destroy();
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
+            scene.physics.add.overlap(bullet, gameState.buildings,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                targ.health -= gameState.zombieMuskateerStats.damage;
+            });
+            scene.physics.add.overlap(bullet, gameState.character,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                gameState.characterStats.health -= gameState.zombieMuskateerStats.damage;
+            });
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieMuskateerStats.health;
+            var target = gameState.zombieMuskateerStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieMuskateerStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieMuskateerStats.attack(scene,target,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieMuskateerStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieMuskateerStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                            zombie.anims.play('zombieMuskateerAction',true);
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieMuskateerStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombieMuskateerDeath',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+
     
     
     createExplosion: function(scene,x,y){
@@ -601,10 +991,11 @@ let gameState = {
             }); 
         }
     },
+    
     gatlingTowerStats:{
         cost: 50,
         damage: 10,
-        health: 25,
+        health: 50,
         attackRange: 150,
         attackSpeed: 200,
         spawnTower: function(scene){
@@ -707,13 +1098,12 @@ let gameState = {
         }
     },
     
-    
     electroTowerStats:{
-        cost: 150,
+        cost: 300,
         damage: 25,
-        health: 100,
+        health: 150,
         attackRange: 200,
-        attackSpeed: 3000,
+        attackSpeed: 4000,
         spawnTower: function(scene){
             var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'electroTower').setDepth(scene.input.y).setImmovable();
             tower.body.offset.y = 30;
@@ -846,7 +1236,207 @@ let gameState = {
                 repeat: -1
             }); 
         }
-    }
+    },
+    
+    barrackStats:{
+        cost: 500,
+        damage: 0,
+        health: 1000,
+        attackRange: 0,
+        guardCount: 3,
+        guardRadius: 150,
+        attackSpeed: 0,
+        count: 0,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'barracks').setDepth(scene.input.y).setImmovable();
+            tower.health = gameState.barrackStats.health;
+            tower.guardCount = 0;
+            gameState.barrackStats.action(scene,tower);
+        },
+        action: function(scene,building){
+            building.anims.play('barracksAction',true);
+            var loop = scene.time.addEvent({
+                delay: 5000,
+                callback: ()=>{
+                    if(building.guardCount <gameState.barrackStats.guardCount){
+                        building.guardCount += 1;
+                        gameState.humanGuardStats.spawnHuman(scene,building.x+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius,building.y+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius,building);
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    humanGuardStats:{
+        name: "Human Guard",
+        speed: 30,
+        health: 100,
+        damage: 15,
+        attackRange: 150,
+        attackSpeed: 200,
+        spawnHuman: function(scene,x,y,barracks){
+            var human = gameState.buildings.create(x,y,`humanGuard`).setDepth(1);
+            human.anims.play(`humanGuardSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.humanGuardStats.behaviourLoop(scene,human,barracks);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,human,target,barracks){
+            var x = barracks.x+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius;
+            var y = barracks.y+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius;
+            scene.physics.moveTo(human,x,y,gameState.humanGuardStats.speed);
+            human.anims.play('humanGuardWalk',true);
+            if(human.x < x){
+                human.flipX = false;
+            }
+            else if(human.x > x){
+                human.flipX = true;
+            }
+        },
+        attack: function (scene, target,human){
+            if(human.x < target){
+                human.flipX = false;
+            }
+            else if(human.x > target){
+                human.flipX = true;
+            }
+            var bullet = gameState.bullets.create(human.x,human.y,'bullet');
+            gameState.angle=Phaser.Math.Angle.Between(human.x,human.y,target.x,target.y);
+            bullet.setRotation(gameState.angle); 
+            scene.physics.moveTo(bullet,target.x,target.y,300);
+            var bulletLoop = scene.time.addEvent({
+                delay: 10000,
+                callback: ()=>{
+                    bullet.destroy();
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
+            scene.physics.add.overlap(bullet, gameState.zombies,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                targ.health -= gameState.humanGuardStats.damage;
+            });
+        },
+        findTarget: function(scene,human){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if( gameState.zombies.getChildren().length >0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], human);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,human,barracks){
+            human.anims.play(`humanGuardWalk`);
+            human.health = gameState.humanGuardStats.health;
+            var target = gameState.humanGuardStats.findTarget(scene,human);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, human);
+            var loop = scene.time.addEvent({
+                delay: gameState.humanGuardStats.attackSpeed,
+                callback: ()=>{
+                    gameState.humanGuardStats.attack(scene,target,human);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            var moveLoop = scene.time.addEvent({
+                delay: 3000,
+                callback: ()=>{
+                    if(loop.paused == true){
+                        gameState.humanGuardStats.movement(scene,human,target,barracks);
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat:-1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(barracks.health <= 0){
+                        bLoop.destroy();
+                        loop.destroy();
+                        moveLoop.destroy();
+                        human.anims.play('humanGuardDeath',true);
+                        human.setVelocityX(0);
+                        human.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            human.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                    if(human.health > 0){
+                        human.depth = human.y;
+                        target = gameState.humanGuardStats.findTarget(scene,human);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, human);
+                        if(dist < gameState.humanGuardStats.attackRange){
+                            human.setVelocityX(0);
+                            human.setVelocityY(0);
+                            loop.paused = false;
+                            human.anims.play('humanGuardAction',true);
+                        }
+                        else {
+                            loop.paused = true;
+                        }
+                    }
+                    else {
+                        barracks.guardCount -= 1;
+                        bLoop.destroy();
+                        loop.destroy();
+                        moveLoop.destroy();
+                        human.anims.play('humanGuardDeath',true);
+                        human.setVelocityX(0);
+                        human.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            human.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
 }
 
 let save = gameState
