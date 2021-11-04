@@ -187,15 +187,17 @@ let gameState = {
     
     
     spawnZombies: function(scene,stats,count){
-        scene.time.addEvent({
-            delay: 100,
-            callback: ()=>{
-                stats.spawnZombie(scene,Math.random()*25+50,Math.random()*window.innerHeight);
-            },  
-            startAt: 0,
-            timeScale: 1,
-            repeat: count-1
-        });
+        if(count > 0){
+            scene.time.addEvent({
+                delay: 100,
+                callback: ()=>{
+                    stats.spawnZombie(scene,Math.random()*25+50,Math.random()*window.innerHeight);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: count-1
+            });
+        }
     },
     commenceWaves: function (scene){
         scene.time.addEvent({
@@ -251,7 +253,6 @@ let gameState = {
                             gameState.zombie1Stats.speed = 20;
                             gameState.zombie1Stats.health = 100;
                             gameState.spawnZombies(scene,gameState.zombie1Stats,50);
-                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,0);
                         }
                         else if(gameState.wave >= 16 && gameState.wave <= 19){
                             gameState.zombie1Stats.attackSpeed = 1000;
@@ -1331,7 +1332,7 @@ let gameState = {
         cost: 300,
         damage: 25,
         health: 150,
-        attackRange: 200,
+        attackRange: 175,
         attackSpeed: 4000,
         spawnTower: function(scene){
             var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'electroTower').setDepth(scene.input.y).setImmovable();
@@ -1485,7 +1486,7 @@ let gameState = {
         action: function(scene,building){
             building.anims.play('barracksAction',true);
             var loop = scene.time.addEvent({
-                delay: 5000,
+                delay: 7500,
                 callback: ()=>{
                     if(building.guardCount <gameState.barrackStats.guardCount){
                         building.guardCount += 1;
