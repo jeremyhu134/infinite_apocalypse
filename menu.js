@@ -9,6 +9,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('zombieWizard','images/zombieWizard.png',{frameWidth: 60,frameHeight:60});
         this.load.spritesheet('zombieBomber','images/zombieBomber.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('zombieMuskateer','images/zombieMuskateer.png',{frameWidth: 38,frameHeight:38});
+        this.load.spritesheet('zombieGiant','images/zombieGiant.png',{frameWidth: 40,frameHeight:40});
         this.load.spritesheet('factory','images/factory.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('gatlingTower','images/gatlingTower.png',{frameWidth: 40,frameHeight:40});
         this.load.spritesheet('electroTower','images/electroTower.png',{frameWidth: 40,frameHeight:70});
@@ -22,6 +23,8 @@ class MenuScene extends Phaser.Scene {
         this.load.image('title','images/title.png');
         this.load.image('healthSign','images/healthSign.png');
         this.load.image('moneySign','images/moneySign.png');
+        this.load.image('pauseSign','images/pauseSign.png');
+        this.load.image('paused','images/paused.png');
         this.load.image('waveSign','images/waveSign.png');
         this.load.image('startButton','images/startButton.png');
     }
@@ -89,6 +92,31 @@ class MenuScene extends Phaser.Scene {
             key: 'zombie1Death',
             frameRate: 10,
             frames:this.anims.generateFrameNames('zombie1',{start: 29,end: 33})
+        });
+        
+        
+        
+        this.anims.create({
+            key: 'zombieGiantSpawn',
+            frameRate: 13,
+            frames:this.anims.generateFrameNames('zombieGiant',{start: 1,end: 16})
+        });
+        this.anims.create({
+            key: 'zombieGiantIdle',
+            frameRate: 25,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('zombieGiant',{start: 17,end: 17})
+        });
+        this.anims.create({
+            key: 'zombieGiantWalk',
+            frameRate: 10,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('zombieGiant',{start: 17,end: 28})
+        });
+        this.anims.create({
+            key: 'zombieGiantDeath',
+            frameRate: 10,
+            frames:this.anims.generateFrameNames('zombieGiant',{start: 29,end: 33})
         });
         
         

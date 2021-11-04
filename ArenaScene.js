@@ -44,6 +44,8 @@ class ArenaScene extends Phaser.Scene {
         gameState.buildings = this.physics.add.group();
         gameState.invisibleTarget = this.physics.add.sprite(-1000,-1000,'bullet');
         
+        
+        
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
         gameState.commenceWaves(this);

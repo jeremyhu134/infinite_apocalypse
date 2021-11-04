@@ -14,7 +14,7 @@ const config = {
             //debug: true
         }
     },
-    scene:[MenuScene,ShopScene,ArenaScene,ChooseHeroScene],
+    scene:[MenuScene,PauseScene,ArenaScene,ChooseHeroScene],
     scale: {
         zoom: 1
     }
@@ -106,6 +106,12 @@ let gameState = {
             fontFamily: 'Qahiri',
             strokeThickness: 10,
         }).setDepth(window.innerHeight+3);
+        var button = scene.add.image(window.innerWidth-75,10,'pauseSign').setOrigin(0,0).setDepth(window.innerHeight+3).setInteractive();
+        button.on('pointerdown', function(pointer){
+            scene.scene.pause('ArenaScene');
+            scene.scene.launch('PauseScene');
+            console.log("ok");
+        });
     },
     
     blueprint:{
@@ -190,7 +196,7 @@ let gameState = {
         scene.time.addEvent({
             delay: 30000,
             callback: ()=>{
-                scene.time.addEvent({
+                gameState.waveLoop = scene.time.addEvent({
                     delay: 45000,
                     callback: ()=>{
                         gameState.wave += 1;
@@ -208,7 +214,7 @@ let gameState = {
                             gameState.zombie1Stats.damage = 5;
                             gameState.zombie1Stats.speed = 20;
                             gameState.zombie1Stats.health = 100;
-                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,10);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,5);
                         }
                         else if(gameState.wave >= 7 && gameState.wave <= 9){
                             gameState.zombie1Stats.attackSpeed = 1000;
@@ -231,7 +237,8 @@ let gameState = {
                             gameState.zombie1Stats.speed = 20;
                             gameState.zombie1Stats.health = 100;
                             gameState.spawnZombies(scene,gameState.zombie1Stats,15);
-                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,15);
+                            gameState.spawnZombies(scene,gameState.zombieMuskateerStats,10);
+                            gameState.spawnZombies(scene,gameState.zombieGiantStats,3);
                         }
                         else if(gameState.wave == 15){
                             gameState.zombie1Stats.attackSpeed = 1000;
@@ -263,7 +270,7 @@ let gameState = {
                             gameState.zombie1Stats.damage = 5;
                             gameState.zombie1Stats.speed = 20;
                             gameState.zombie1Stats.health = 100;
-                            gameState.spawnZombies(scene,gameState.zombie1Stats,10);
+                            gameState.spawnZombies(scene,gameState.zombieGiantStats,10);
                             gameState.spawnZombies(scene,gameState.zombieBomberStats,10);
                         }
                         else if(gameState.wave >= 22 && gameState.wave <= 24){
@@ -296,7 +303,7 @@ let gameState = {
                             gameState.zombie1Stats.damage = 5;
                             gameState.zombie1Stats.speed = 20;
                             gameState.zombie1Stats.health = 100;
-                            gameState.spawnZombies(scene,gameState.zombie1Stats,10);
+                            gameState.spawnZombies(scene,gameState.zombieGiantStats,10);
                             gameState.spawnZombies(scene,gameState.zombieWizardStats,3);
                         }
                         else if(gameState.wave == 50){
@@ -317,6 +324,7 @@ let gameState = {
                             gameState.spawnZombies(scene,gameState.zombie1Stats,30);
                             gameState.spawnZombies(scene,gameState.zombieMuskateerStats,20);
                             gameState.spawnZombies(scene,gameState.zombieBomberStats,5);
+                            gameState.spawnZombies(scene,gameState.zombieGiantStats,10);
                         }
                         
                         
@@ -421,6 +429,114 @@ let gameState = {
                         bLoop.destroy();
                         loop.destroy();
                         zombie.anims.play('zombie1Death',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    zombieGiantStats:{
+        name: "Zombie Giant",
+        speed: 20,
+        health: 600,
+        damage: 25,
+        attackRange: 30,
+        attackSpeed: 3000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieGiant`).setDepth(1);
+            zombie.anims.play(`zombieGiantSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieGiantStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieGiantStats.speed);
+            zombie.anims.play('zombieGiantWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target){
+            if(target == gameState.character){
+                gameState.characterStats.health -= gameState.zombieGiantStats.damage;
+            }
+            else {
+                target.health -= gameState.zombieGiantStats.damage;
+            }
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieGiantStats.health;
+            var target = gameState.zombieGiantStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieGiantStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieGiantStats.attack(scene,target);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieGiantStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieGiantStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieGiantStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombieGiantDeath',true);
                         zombie.setVelocityX(0);
                         zombie.setVelocityY(0);
                         scene.time.addEvent({
