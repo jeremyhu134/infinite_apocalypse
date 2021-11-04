@@ -12,6 +12,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('zombieGiant','images/zombieGiant.png',{frameWidth: 40,frameHeight:40});
         this.load.spritesheet('factory','images/factory.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('gatlingTower','images/gatlingTower.png',{frameWidth: 40,frameHeight:40});
+        this.load.spritesheet('sniperTower','images/sniperTower.png',{frameWidth: 45,frameHeight:135});
         this.load.spritesheet('electroTower','images/electroTower.png',{frameWidth: 40,frameHeight:70});
         this.load.spritesheet('electricWave','images/electricWave.png',{frameWidth: 400,frameHeight:400});
         this.load.spritesheet('barracks','images/barracks.png',{frameWidth: 50,frameHeight:50});
@@ -219,6 +220,20 @@ class MenuScene extends Phaser.Scene {
             frameRate: 12,
             repeat: -1,
             frames:this.anims.generateFrameNames('gatlingTower',{start: 1,end: 2})
+        });
+        
+        
+        
+        this.anims.create({
+            key: 'sniperTowerIdle',
+            frameRate: 1,
+            frames:this.anims.generateFrameNames('sniperTower',{start: 0,end: 0})
+        });
+        this.anims.create({
+            key: 'sniperTowerAction',
+            frameRate: 12,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('sniperTower',{start: 1,end: 1})
         });
         
         

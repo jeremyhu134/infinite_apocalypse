@@ -177,6 +177,11 @@ let gameState = {
             else if(gameState.keys.FIVE.isDown && gameState.blueprint.active == false){
                 gameState.blueprint.create(scene,'barracks',gameState.barrackStats);
             }
+            else if(gameState.keys.SIX.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'sniperTower',gameState.sniperTowerStats);
+                gameState.blueprintSprite.body.offset.y = 85;
+                gameState.blueprintSprite.body.height = 50;
+            }
         }
     },
     
@@ -1198,6 +1203,114 @@ let gameState = {
                         else {
                             loop.paused = true;
                             building.anims.play('gatlingTowerIdle',true);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                        building.destroy(); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });  
+        }
+    },
+    
+    sniperTowerStats:{
+        cost: 100,
+        damage: 50,
+        health: 100,
+        attackRange: 300,
+        attackSpeed: 4000,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'sniperTower').setDepth(scene.input.y+20).setImmovable();
+            tower.health = gameState.sniperTowerStats.health;
+            tower.body.offset.y = 85;
+            tower.body.height = 50;
+            gameState.sniperTowerStats.action(scene,tower);
+        },
+        findTarget: function(scene,building){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if(gameState.zombies.getChildren().length > 0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
+        action: function(scene,building){
+            var target = gameState.sniperTowerStats.findTarget(scene,building);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+            var loop = scene.time.addEvent({
+                delay: gameState.sniperTowerStats.attackSpeed,
+                callback: ()=>{
+                    var bullet = gameState.bullets.create(building.x,building.y,'bullet');
+                    gameState.angle=Phaser.Math.Angle.Between(building.x,building.y,target.x,target.y);
+                    bullet.setRotation(gameState.angle); 
+                    scene.physics.moveTo(bullet,target.x +(Math.random()*6-10),target.y +(Math.random()*6-10),800);
+                    var bulletLoop = scene.time.addEvent({
+                        delay: 8000,
+                        callback: ()=>{
+                            bullet.destroy();
+                        },  
+                        startAt: 0,
+                        timeScale: 1
+                    });
+                    scene.physics.add.overlap(bullet, gameState.zombies,(bull, targ)=>{
+                        bulletLoop.destroy();
+                        bull.destroy();
+                        targ.health -= gameState.sniperTowerStats.damage;
+                    });
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                    }
+                    else {
+                        gameState.sniperTowerStats.findTarget(scene,building)
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health > 0){
+                        target = gameState.sniperTowerStats.findTarget(scene,building);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                        if(dist < gameState.sniperTowerStats.attackRange){
+                            if(target.x < building.x){
+                                building.flipX = true;
+                            }else {
+                                building.flipX = false;
+                            }
+                            building.anims.play('sniperTowerAction',true);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            building.anims.play('sniperTowerIdle',true);
                         }
                     }
                     else {

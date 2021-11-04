@@ -38,7 +38,7 @@ class ArenaScene extends Phaser.Scene {
         gameState.mouse=this.input.mousePointer;
         //this.input.mouse.disableContextMenu();
         gameState.cursors = this.input.keyboard.createCursorKeys();
-        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,FIVE,ESC');
+        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,FIVE,SIX,ESC');
         gameState.bullets = this.physics.add.group();
         
         gameState.buildings = this.physics.add.group();
