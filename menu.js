@@ -3,6 +3,10 @@ class MenuScene extends Phaser.Scene {
 		super({ key: 'MenuScene' })
 	}
     preload(){
+        this.load.image('grassFieldBackground', 'images/grassFieldBackground.png');
+        this.load.image('caveBackground', 'images/caveBackground.png');
+        this.load.image('canyonBackground', 'images/canyonBackground.png');
+        
         this.load.spritesheet('character','images/character.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('zombieKing','images/zombieKing.png',{frameWidth: 200,frameHeight:200});
         this.load.spritesheet('zombie1','images/zombie1.png',{frameWidth: 32,frameHeight:32});

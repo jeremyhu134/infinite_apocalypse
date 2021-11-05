@@ -31,6 +31,19 @@ let gameState = {
     },
     invisibleTarget : null,
     
+    createBackground : function (scene){
+        var num = Math.ceil(Math.random ()*3);
+        if(num == 1){
+            scene.add.image(0,0, 'grassFieldBackground').setOrigin(0,0).setScale((window.innerHeight-10)/675);
+        }
+        else if(num == 2){
+            scene.add.image(0,0, 'caveBackground').setOrigin(0,0).setScale((window.innerHeight-10)/675);
+        }
+        else if(num == 3){
+            scene.add.image(0,0, 'canyonBackground').setOrigin(0,0).setScale((window.innerHeight-10)/675);
+        }
+    },
+    
     chracterControls : function(scene){
         if(gameState.characterStats.health > 0){
             gameState.healthText.setText(`${gameState.characterStats.health}`);

@@ -25,6 +25,7 @@ class ArenaScene extends Phaser.Scene {
         //this.load.spritesheet('redscout','tf2arenaimages/redscout.png',{frameWidth: 33,frameHeight:53});
     }
     create(){
+        gameState.createBackground(this);
         gameState.globalScene = this;
         gameState.character = this.physics.add.sprite(window.innerWidth/2-16,window.innerHeight/2+16,'character');
         gameState.character.body.offset.y = 16;
