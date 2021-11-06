@@ -6,6 +6,7 @@ class PauseScene extends Phaser.Scene {
         
     }
     create() {
+        this.scene.bringToTop();
         var back = this.add.image(window.innerWidth-75,10,'pauseSign').setOrigin(0,0).setInteractive();
         this.add.image(window.innerWidth/2,window.innerHeight/2,'paused');
         var scene = this;

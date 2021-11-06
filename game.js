@@ -1080,7 +1080,7 @@ let gameState = {
         attackRange: 0,
         sightRange: 0,
         attackSpeed: 0,
-        moneyProduce: 10,
+        moneyProduce: 15,
         count: 0,
         maxCount: 20,
         spawnTower: function(scene){
@@ -1454,7 +1454,7 @@ let gameState = {
     },
     
     woodWallStats:{
-        cost: 50,
+        cost: 25,
         health: 50,
         count: 0,
         spawnTower: function(scene){
