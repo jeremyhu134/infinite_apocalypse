@@ -31,6 +31,8 @@ class MenuScene extends Phaser.Scene {
         this.load.image('pauseSign','images/pauseSign.png');
         this.load.image('paused','images/paused.png');
         this.load.image('waveSign','images/waveSign.png');
+        this.load.image('buildSign','images/buildSign.png');
+        this.load.image('buildMenuBg','images/buildMenuBg.png');
         this.load.image('startButton','images/startButton.png');
     }
     create() {

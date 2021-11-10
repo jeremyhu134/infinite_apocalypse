@@ -47,6 +47,7 @@ class ArenaScene extends Phaser.Scene {
         
         
         
+        gameState.createBuildMenu(this);
         gameState.zombies = this.physics.add.group();
         gameState.spawnCount = 5;
         gameState.commenceWaves(this);

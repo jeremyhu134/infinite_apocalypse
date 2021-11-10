@@ -16,7 +16,9 @@ const config = {
     },
     scene:[MenuScene,PauseScene,ArenaScene,ChooseHeroScene],
     scale: {
-        zoom: 1
+        zoom: 1,
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
     }
 };
 
@@ -97,6 +99,23 @@ let gameState = {
         gameState.moneyText.setText(`${gameState.money}`);
     },
     
+    createTempText:function(scene,x,y,text,time,size){
+        var text = scene.add.text(x, y, `${text}`, {
+            fill: '#OOOOOO', 
+            fontSize: `${size}px`,
+            fontFamily: 'Qahiri',
+            strokeThickness: 5,
+        }).setDepth(window.innerHeight+3);
+        scene.time.addEvent({
+            delay: time,
+            callback: ()=>{
+                text.destroy();
+            },  
+            startAt: 0,
+            timeScale: 1
+        });
+    },
+    
     createIcons: function (scene){
         scene.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(window.innerHeight+3);
         gameState.moneyText = scene.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {
@@ -127,6 +146,82 @@ let gameState = {
         });
     },
     
+    buildMenuActive : false,
+    createBuildMenu: function (scene){
+        gameState.buildButton = scene.add.image(window.innerWidth-75,window.innerHeight-40,'buildSign').setInteractive().setDepth(window.innerHeight+4);
+        var bg;
+        var icons = [];
+        gameState.buildButton.on('pointerdown', function(pointer){
+            if(gameState.buildMenuActive == false){
+                gameState.buildMenuActive = true;
+                
+                bg = scene.add.image(0,window.innerHeight-68,'buildMenuBg').setOrigin(0,0).setDepth(window.innerHeight+3);
+                icons.push(bg);
+                
+                var tower1 = scene.add.sprite(8,window.innerHeight-54,'factory').setOrigin(0.0).setDepth(window.innerHeight+3).setInteractive();
+                tower1.setScale(40/tower1.height);
+                icons.push(tower1);
+                tower1.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.blueprint.create(scene,'factory',gameState.factoryStats);
+                    }
+                });
+                
+                var tower2 = scene.add.sprite(tower1.x+100,window.innerHeight-54,'woodWall').setOrigin(0.0).setDepth(window.innerHeight+3).setInteractive();
+                tower2.setScale(40/tower2.height);
+                icons.push(tower2);
+                tower2.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.blueprint.create(scene,'woodWall',gameState.woodWallStats);
+                    }
+                });
+                
+                var tower3 = scene.add.sprite(tower2.x+100,window.innerHeight-54,'gatlingTower').setOrigin(0.0).setDepth(window.innerHeight+3).setInteractive();
+                tower3.setScale(40/tower3.height);
+                icons.push(tower3);
+                tower3.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.blueprint.create(scene,'gatlingTower',gameState.gatlingTowerStats);
+                    }
+                });
+                
+                var tower4 = scene.add.sprite(tower3.x+100,window.innerHeight-54,'electroTower').setOrigin(0.0).setDepth(window.innerHeight+4).setInteractive();
+                tower4.setScale(40/tower4.height);
+                icons.push(tower4);
+                tower4.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.blueprint.create(scene,'electroTower',gameState.electroTowerStats);
+                    }
+                });
+                
+                var tower5 = scene.add.sprite(tower4.x+100,window.innerHeight-54,'barracks').setOrigin(0.0).setDepth(window.innerHeight+5).setInteractive();
+                tower5.setScale(40/tower5.height);
+                icons.push(tower5);
+                tower5.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.blueprint.create(scene,'barracks',gameState.barrackStats);
+                    }
+                });
+                
+                var tower6 = scene.add.sprite(tower5.x+100,window.innerHeight-54,'sniperTower').setOrigin(0.0).setDepth(window.innerHeight+6).setInteractive();
+                tower6.setScale(40/tower6.height);
+                icons.push(tower6);
+                tower6.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.blueprint.create(scene,'sniperTower',gameState.sniperTowerStats);
+                    }
+                });
+            }
+            else if(gameState.buildMenuActive == true){
+                gameState.buildMenuActive = false;
+                bg.destroy();
+                for (var i = 0; i < icons.length; i++){
+                    icons[i].destroy();
+                }
+            }
+        });
+    },
+    
     blueprint:{
         active: false,
         button: null,
@@ -142,10 +237,16 @@ let gameState = {
             gameState.blueprintSprite = scene.physics.add.sprite(scene.input.x,scene.input.y,`${towerSprite}`).setInteractive().setDepth(1);
             gameState.blueprint.building = towerStats;
             gameState.blueprint.button = gameState.blueprintSprite.on('pointerdown', function(pointer){
-                if(gameState.money >= towerStats.cost && gameState.blueprint.overLap >5){
+                if(gameState.money >= towerStats.cost && gameState.blueprint.overLap >5 && gameState.blueprintSprite.x > 400){
                     gameState.money -= towerStats.cost;
                     gameState.blueprint.building.spawnTower(gameState.globalScene);
                     gameState.updateMoney();
+                }
+                else if(gameState.blueprintSprite.x <= 400){
+                    gameState.createTempText(scene,10,window.innerHeight/2,"!!!CANT BUILD INSIDE THE SPAWN ZONE!!!",2500,18);
+                }
+                else if(gameState.money < towerStats.cost){
+                    gameState.createTempText(scene,10,10,`Building Costs : $${gameState.blueprint.building.cost}`,3000,25);
                 }
             });
             gameState.blueprintOverlapCheck = scene.physics.add.overlap(gameState.blueprintSprite, gameState.buildings,()=>{
@@ -337,13 +438,13 @@ let gameState = {
                             if(gameState.zombie1Stats.attackSpeed > 500){
                                 gameState.zombie1Stats.attackSpeed -= 10;
                             }   
-                            gameState.zombie1Stats.damage += 2;
-                            gameState.zombie1Stats.speed += 5;
-                            gameState.zombie1Stats.health += 2;
-                            gameState.spawnZombies(scene,gameState.zombie1Stats,30);
+                            gameState.zombie1Stats.damage += 5;
+                            gameState.zombie1Stats.speed += 2;
+                            gameState.zombie1Stats.health += 5;
+                            gameState.spawnZombies(scene,gameState.zombie1Stats,40);
                             gameState.spawnZombies(scene,gameState.zombieMuskateerStats,20);
-                            gameState.spawnZombies(scene,gameState.zombieBomberStats,5);
-                            gameState.spawnZombies(scene,gameState.zombieGiantStats,10);
+                            gameState.spawnZombies(scene,gameState.zombieBomberStats,10);
+                            gameState.spawnZombies(scene,gameState.zombieGiantStats,20);
                         }
                         
                         
@@ -682,7 +783,7 @@ let gameState = {
     zombieKingStats:{
         name: "Zombie King",
         speed: 10,
-        health: 10000,
+        health: 50000,
         damage: 500,
         attackRange: 100,
         attackSpeed: 3000,
@@ -794,8 +895,8 @@ let gameState = {
     zombieWizardStats:{
         name: "Zombie Wizard",
         speed: 25,
-        health: 1000,
-        damage: 20,
+        health: 1500,
+        damage: 25,
         attackRange: 200,
         attackSpeed: 1500,
         spawnZombie: function(scene,x,y){
@@ -936,8 +1037,8 @@ let gameState = {
     zombieMuskateerStats:{
         name: "Zombie Muskateer",
         speed: 30,
-        health: 75,
-        damage: 5,
+        health: 100,
+        damage: 10,
         attackRange: 150,
         attackSpeed: 2000,
         spawnZombie: function(scene,x,y){
@@ -1082,9 +1183,9 @@ let gameState = {
         attackSpeed: 0,
         moneyProduce: 15,
         count: 0,
-        maxCount: 20,
+        maxCount: 15,
         spawnTower: function(scene){
-            if(gameState.factoryStats.count < 20){
+            if(gameState.factoryStats.count < gameState.factoryStats.maxCount){
                 gameState.factoryStats.count ++;
                 var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'factory').setDepth(scene.input.y).setImmovable();
                 tower.health = gameState.factoryStats.health;
@@ -1484,7 +1585,7 @@ let gameState = {
     barrackStats:{
         cost: 500,
         damage: 0,
-        health: 1000,
+        health: 500,
         attackRange: 0,
         guardCount: 3,
         guardRadius: 150,
@@ -1530,7 +1631,7 @@ let gameState = {
         name: "Human Guard",
         speed: 30,
         health: 100,
-        damage: 15,
+        damage: 10,
         attackRange: 150,
         attackSpeed: 200,
         spawnHuman: function(scene,x,y,barracks){
