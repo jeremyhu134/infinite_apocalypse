@@ -34,18 +34,15 @@ class ArenaScene extends Phaser.Scene {
         /*this.physics.add.collider(gameState.player, gameState.barriers,(hero,barrier)=>{
             
         });*/
-        
         gameState.input=this.input;
         gameState.mouse=this.input.mousePointer;
         //this.input.mouse.disableContextMenu();
         gameState.cursors = this.input.keyboard.createCursorKeys();
-        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,FIVE,SIX,ESC');
+        gameState.keys = this.input.keyboard.addKeys('W,S,A,D,R,SPACE,SHIFT,ONE,TWO,THREE,FOUR,FIVE,SIX,SEVEN,EIGHT,ESC');
         gameState.bullets = this.physics.add.group();
         
         gameState.buildings = this.physics.add.group();
         gameState.invisibleTarget = this.physics.add.sprite(-1000,-1000,'bullet');
-        
-        
         
         gameState.createBuildMenu(this);
         gameState.zombies = this.physics.add.group();

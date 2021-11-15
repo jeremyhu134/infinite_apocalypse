@@ -10,6 +10,7 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('character','images/character.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('zombieKing','images/zombieKing.png',{frameWidth: 200,frameHeight:200});
         this.load.spritesheet('zombie1','images/zombie1.png',{frameWidth: 32,frameHeight:32});
+        this.load.spritesheet('zombieDog','images/zombieDog.png',{frameWidth: 27,frameHeight:25});
         this.load.spritesheet('zombieWizard','images/zombieWizard.png',{frameWidth: 60,frameHeight:60});
         this.load.spritesheet('zombieBomber','images/zombieBomber.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('zombieMuskateer','images/zombieMuskateer.png',{frameWidth: 38,frameHeight:38});
@@ -22,8 +23,12 @@ class MenuScene extends Phaser.Scene {
         this.load.spritesheet('barracks','images/barracks.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('humanGuard','images/humanGuard.png',{frameWidth: 32,frameHeight:32});
         this.load.spritesheet('woodWall','images/woodWall.png',{frameWidth: 18,frameHeight:30});
+        this.load.spritesheet('ufo','images/ufo.png',{frameWidth: 70,frameHeight:44});
+        this.load.spritesheet('alienTower','images/alienTower.png',{frameWidth: 50,frameHeight:50});
         this.load.spritesheet('buildingExplosion','images/buildingExplosion.png',{frameWidth: 75,frameHeight:75});
         this.load.image('bullet','images/bullet.png');
+        this.load.image('nothing','images/nothing.png');
+        this.load.image('ufoLaser','images/ufoLaser.png');
         this.load.image('zombieWizardBall','images/zombieWizardBall.png');
         this.load.image('title','images/title.png');
         this.load.image('healthSign','images/healthSign.png');
@@ -99,6 +104,31 @@ class MenuScene extends Phaser.Scene {
             key: 'zombie1Death',
             frameRate: 10,
             frames:this.anims.generateFrameNames('zombie1',{start: 29,end: 33})
+        });
+        
+        
+        
+        this.anims.create({
+            key: 'zombieDogSpawn',
+            frameRate: 15,
+            frames:this.anims.generateFrameNames('zombieDog',{start: 0,end: 3})
+        });
+        this.anims.create({
+            key: 'zombieDogIdle',
+            frameRate: 4,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('zombieDog',{start: 5,end: 5})
+        });
+        this.anims.create({
+            key: 'zombieDogWalk',
+            frameRate: 30,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('zombieDog',{start: 5,end: 16})
+        });
+        this.anims.create({
+            key: 'zombieDogDeath',
+            frameRate: 10,
+            frames:this.anims.generateFrameNames('zombieDog',{start: 17,end: 21})
         });
         
         
@@ -300,6 +330,15 @@ class MenuScene extends Phaser.Scene {
             frameRate: 10,
             repeat: -1,
             frames:this.anims.generateFrameNames('barracks',{start: 0,end: 1})
+        });
+        
+        
+        
+        this.anims.create({
+            key: 'ufoActive',
+            frameRate: 13,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('ufo',{start: 0,end: 1})
         });
         
         
