@@ -25,7 +25,7 @@ const config = {
 const game = new Phaser.Game(config);
 
 let gameState = {
-    money : 500,
+    money : 100,
     wave: 0,
     characterStats: {
         speed : 100,
