@@ -26,7 +26,7 @@ const game = new Phaser.Game(config);
 
 
 let gameState = {
-    coins: 1000,
+    coins: 150,
     characterStats: {
         speed : 150,
         health: 100,
@@ -57,6 +57,7 @@ let gameState = {
         
         //reset zombie stats
         gameState.zombie.speed =  75;
+        gameState.bossSummonKills = 25;
     },
     
     chracterControls : function(scene){
