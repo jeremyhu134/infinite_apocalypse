@@ -293,6 +293,7 @@ let gameState = {
                     var closest = 10000;
                     var dist;
                     var target;
+                    var count = 0;
                     for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
                         dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], gameState.character);
                         if(dist<closest){
@@ -316,7 +317,8 @@ let gameState = {
                             });
                             gren.destroy();
                             for (var i = 0; i < gameState.zombies.getChildren().length; i++){
-                                if(Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], gren)<200){
+                                count ++;
+                                if(Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], gren)<200 && count < 10){
                                     gameState.zombies.getChildren()[i].health -= 100;
                                 }
                             }
@@ -538,8 +540,8 @@ let gameState = {
                             callback: ()=>{
                                 zom.destroy();
                                 gameState.spawnZombies.paused = false;
-                                if(gameState.zombie.speed <= 115){
-                                    gameState.zombie.speed += 5;
+                                if(gameState.zombie.speed <= 150){
+                                    gameState.zombie.speed += 10;
                                 }
                             },  
                             startAt: 0,
