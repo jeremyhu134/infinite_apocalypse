@@ -69,7 +69,7 @@ class UpgradeScene extends Phaser.Scene {
 		});
         var speed = this.add.sprite(window.innerWidth/4,window.innerHeight/2+window.innerHeight/4,'upgradeOptions').setInteractive();
         for (var i = 0; i < gameState.characterStats.speed-150; i += 5){
-            this.add.rectangle(window.innerWidth/4+33+(i/5*18), window.innerHeight/4+402, 15, 15, 0x39FF14);
+            this.add.rectangle(window.innerWidth/4+33+(i/5*18), window.innerHeight/2+window.innerHeight/4+103, 15, 15, 0x39FF14);
         }
         speed.anims.play('speed');
         speed.on('pointerup', () => {
@@ -78,7 +78,7 @@ class UpgradeScene extends Phaser.Scene {
                 coinsText.setText(`${gameState.coins}`);
                 gameState.characterStats.speed += 5;
                 for (var i = 0; i < gameState.characterStats.speed-150; i += 5){
-                    this.add.rectangle(window.innerWidth/4+33+(i/5*18), window.innerHeight/4+402, 15, 15, 0x39FF14);
+                    this.add.rectangle(window.innerWidth/4+33+(i/5*18), window.innerHeight/2+window.innerHeight/4+103, 15, 15, 0x39FF14);
                 }
                 alert("Increased Speed : PURCHASED");
             } else{
