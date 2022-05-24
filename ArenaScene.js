@@ -183,7 +183,7 @@ class ArenaScene extends Phaser.Scene {
                         this.time.addEvent({
                             delay: 1000,
                             callback: ()=>{
-                                gameState.bossSummonKills += 50*(gameState.bossSummonKills/50);
+                                gameState.bossSummonKills += 25*(gameState.bossSummonKills/25);
                                 gameState.createSarmsZombie(this,window.innerWidth/2,window.innerHeight/2);
                                 console.log(gameState.kills);
                             },
