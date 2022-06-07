@@ -61,7 +61,8 @@ class ArenaScene extends Phaser.Scene {
             callback: ()=>{
                 killsText.setText(gameState.kills);
                 coinsText.setText(gameState.coins);
-                if (gameState.kills >= gameState.bossSummonKills){
+                if (gameState.bossSummonKills >= 30){
+                    gameState.bossSummonKills = 0;
                     gameState.bossBattle = true;
                     gameState.spawnZombies.paused = true;
                     if(gameState.zombies.getChildren().length > 0){

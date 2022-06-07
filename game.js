@@ -45,7 +45,7 @@ let gameState = {
     bulletSpeed: 1000,
     kills: 0,
     highestKills:0,
-    bossSummonKills: 30,
+    bossSummonKills: 0,
     disableReload: false,
     
     skin: 'character',
@@ -86,7 +86,7 @@ let gameState = {
         //reset zombie stats
         gameState.zombie.speed =  75;
         gameState.zombie.health =  100;
-        gameState.bossSummonKills = 30;
+        gameState.bossSummonKills = 0;
     },
     
     
@@ -510,6 +510,7 @@ let gameState = {
                         attack.destroy();
                         zom.setVelocityX(0);
                         zom.setVelocityY(0);
+                        gameState.bossSummonKills++;
                         if(gameState.skin == "characterGoldenGun"){
                             zom.anims.play('zombieGoldDeath','true');
                         }else {
