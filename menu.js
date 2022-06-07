@@ -4,29 +4,40 @@ class MenuScene extends Phaser.Scene {
 	}
     preload(){
         this.load.spritesheet('loading','images/loadingSprite.png',{frameWidth: 30,frameHeight:3});
-        
+        //people
         this.load.spritesheet('character','images/character.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('characterSkeletonGun','images/characterSkeletonGun.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('characterSus','images/characterSus.png',{frameWidth: 50,frameHeight:50});
+        this.load.spritesheet('characterGoldenGun','images/characterGoldenGun.png',{frameWidth: 50,frameHeight:50});
         
+        this.load.spritesheet('merchant','images/merchantSprite.png',{frameWidth: 100,frameHeight:90});
         //zombies
         this.load.spritesheet('zombie','images/zombie.png',{frameWidth: 44,frameHeight:65});
         this.load.spritesheet('sarmsZombie','images/sarmsZombie.png',{frameWidth: 70,frameHeight:70});
         
         this.load.spritesheet('quadZombie','images/quadZombie.png',{frameWidth: 44,frameHeight:80});
         this.load.spritesheet('quadZombieAbility','images/quadZombieAbility.png',{frameWidth: 200,frameHeight:200});
+        this.load.spritesheet('zombieClone','images/zombieClone.png',{frameWidth: 50,frameHeight:50});
         
         //Items
         this.load.spritesheet('gunFlash','images/gunFlash.png',{frameWidth: 20,frameHeight:20});
         this.load.spritesheet('explosion','images/explosion.png',{frameWidth: 75,frameHeight:75});
         this.load.spritesheet('bulletBlood','images/bulletBlood.png',{frameWidth: 20,frameHeight:20});
+        //bullets
         this.load.image('bullet1','images/bullet1.png');
+        this.load.image('bulletSG','images/bulletSG.png');
+        this.load.image('bulletGolden','images/bulletGolden.png');
+        
         this.load.spritesheet('coin','images/coin.png',{frameWidth: 30,frameHeight:32});
         this.load.image('gunMagazine','images/gunMagazine.png');
         this.load.spritesheet('background','images/background.png',{frameWidth: 1397,frameHeight:675});
         this.load.spritesheet('infiniteBulletsImage','images/infiniteBulletsImage.png',{frameWidth: 35,frameHeight:35});
         this.load.spritesheet('grenadeImage','images/grenadeImage.png',{frameWidth: 35,frameHeight:35});
+        this.load.spritesheet('medicImage','images/medicImage.png',{frameWidth: 35,frameHeight:35});
         this.load.image('healthBar','images/healthBar.png');
         this.load.image('zombieHealthBar','images/zombieHealthBar.png');
         this.load.image('healthBarBg','images/healthBarBg.png');
+        this.load.image('healthImage','images/healthImage.png');
         this.load.image('barrier','images/barrier.png');    
         this.load.image('skull','images/skull.png');  
         this.load.image('redSkull','images/redSkull.png');
@@ -34,20 +45,49 @@ class MenuScene extends Phaser.Scene {
         this.load.image('titleImage','images/titleImage.png');
         this.load.image('upgradeButton','images/upgradeButton.png');
         this.load.image('backButton','images/backButton.png');
+        this.load.image('backButton2','images/backButton2.png');
         this.load.image('settingsButton','images/settingsButton.png');
         //pause menu
         this.load.image('pauseMainMenuButton','images/pauseMainMenuButton.png');
         this.load.image('pauseMenu','images/pauseMenu.png');
+        //upgrade sprites
         this.load.spritesheet('upgradeOptions','images/upgradeOptions.png',{frameWidth: 400,frameHeight:200});
+        //death menu
+        this.load.image('deathMenu','images/deathMenu.png');
         
-         this.load.image('grenadeObj','images/grenadeObj.png');
+        this.load.image('grenadeObj','images/grenadeObj.png');
+        
+        //Shop icons
+        this.load.image('equippedImage','images/equippedImage.png');
+        this.load.image('susShop','images/susShop.png');
+        this.load.image('goldenGunShop','images/goldenGunShop.png');
         
         //audio
-        this.load.audio('gunShootSound', 'audio/gunShootSound.mp3');
+        this.load.audio('menuBgMusic', 'audio/menuBgMusic.mp3');
+        this.load.audio('bossMusic', 'audio/bossMusic.mp3');
+        this.load.audio('arenaMusic', 'audio/arenaMusic.mp3');
     }
     create() {
+        //set current scene to variable
         gameState.currentScene = "MenuScene";
-        //audio
+        
+    //audio
+        //config for keeping sound loop
+        gameState.loopSound = {
+            loop: true,
+            volume: 100
+        }
+        gameState.bgM = this.sound.add('menuBgMusic');
+        gameState.bgM.play(gameState.loopSound);
+        //mute music other than background music for menu
+        if(gameState.bossM){
+            gameState.bossM.setMute(true);
+        } if (gameState.arenaM){
+            gameState.arenaM.setMute(true);
+        }
+        
+        
+        
         //Loading Animations
         this.anims.create({
             key: 'load',
@@ -67,6 +107,58 @@ class MenuScene extends Phaser.Scene {
             frameRate: 25,
             repeat: -1,
             frames:this.anims.generateFrameNames('character',{start: 0,end: 11})
+        });
+        //skins
+        this.anims.create({
+            key: 'characterSusIdle',
+            frameRate: 1,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('characterSus',{start: 0,end: 0})
+        });
+        this.anims.create({
+            key: 'characterSusWalk',
+            frameRate: 25,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('characterSus',{start: 0,end: 11})
+        });
+        this.anims.create({
+            key: 'characterSkeletonGunIdle',
+            frameRate: 1,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('characterSkeletonGun',{start: 0,end: 0})
+        });
+        this.anims.create({
+            key: 'characterSkeletonGunWalk',
+            frameRate: 25,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('characterSkeletonGun',{start: 0,end: 11})
+        });
+        this.anims.create({
+            key: 'characterGoldenGunIdle',
+            frameRate: 1,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('characterGoldenGun',{start: 0,end: 0})
+        });
+        this.anims.create({
+            key: 'characterGoldenGunWalk',
+            frameRate: 25,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('characterGoldenGun',{start: 0,end: 11})
+        });
+        
+        
+        
+        
+        
+        
+        
+        
+        //merchant animation
+        this.anims.create({
+            key: 'move',
+            frameRate: 1,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('merchant',{start: 0,end: 11})
         });
         
         //zombie
@@ -91,6 +183,11 @@ class MenuScene extends Phaser.Scene {
             key: 'zombieDeath',
             frameRate: 12,
             frames:this.anims.generateFrameNames('zombie',{start: 26,end: 29})
+        });
+        this.anims.create({
+            key: 'zombieGoldDeath',
+            frameRate: 12,
+            frames:this.anims.generateFrameNames('zombie',{start: 30,end: 33})
         });
         
         //sarmszombie
@@ -157,9 +254,28 @@ class MenuScene extends Phaser.Scene {
         });
         this.anims.create({
             key: 'quadZombieTarget',
-            frameRate: 10,
+            frameRate: 17,
             frames:this.anims.generateFrameNames('quadZombieAbility',{start: 0,end: 9})
         });
+        
+        //clone zombie
+        this.anims.create({
+            key: 'cloneZombieMove',
+            frameRate: 14,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('zombieClone',{start: 11,end: 22})
+        });
+        this.anims.create({
+            key: 'cloneZombieSpawn',
+            frameRate: 13,
+            frames:this.anims.generateFrameNames('zombieClone',{start: 0,end: 10})
+        });
+        this.anims.create({
+            key: 'cloneZombieDeath',
+            frameRate: 12,
+            frames:this.anims.generateFrameNames('zombieClone',{start: 23,end: 26})
+        });
+        
         
         
         //Upgrade options spritesheet
@@ -237,13 +353,26 @@ class MenuScene extends Phaser.Scene {
             repeat: -1,
             frames:this.anims.generateFrameNames('grenadeImage',{start: 0,end: 7})
         });
+        this.anims.create({
+            key: 'shine3',
+            frameRate: 7,
+            repeat: -1,
+            frames:this.anims.generateFrameNames('medicImage',{start: 0,end: 6})
+        });
         
         gameState.globalScene = this;
-        this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(-100);
+        //create and animate background
+        var bg = this.physics.add.sprite(0,0,'background').setOrigin(0,0).setScale(window.innerHeight/675).setDepth(-100);
+        bg.anims.play('bganimate','true');
+        
+        //add title
         this.add.sprite(window.innerWidth/2,100,'titleImage').setScale(1.5);
         
         //Changes cursor icon image
         this.input.setDefaultCursor('url(images/cursor.cur), pointer');
+    
+        gameState.loadSave();
+	
         
         var button = this.add.image(window.innerWidth/2,window.innerHeight/2,'startButton').setInteractive();
         button.on('pointerdown', function(pointer){
