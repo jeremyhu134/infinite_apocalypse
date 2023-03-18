@@ -7,31 +7,19 @@ class PauseScene extends Phaser.Scene {
     }
     create() {
         this.scene.bringToTop();
-        this.add.image(window.innerWidth/2,window.innerHeight/2,'pauseMenu');
+        var back = this.add.image(window.innerWidth-75,10,'pauseSign').setOrigin(0,0).setInteractive();
+        this.add.image(window.innerWidth/2,window.innerHeight/2,'paused');
         var scene = this;
-        
-        var back = this.add.image(window.innerWidth-75,10,'backButton').setOrigin(0,0).setInteractive();
+        var paused = false;
         back.on('pointerup', () => {
-            scene.scene.stop("PauseScene");
-            scene.scene.resume(`${gameState.currentScene}`);
+            if(paused == false){
+                paused = true;
+            }
+            else {
+                scene.scene.stop("PauseScene");
+                scene.scene.resume("ArenaScene");
+            }
 		});
-        
-        var mainMenu = this.add.image(window.innerWidth/2,window.innerHeight/2+200,'pauseMainMenuButton').setInteractive();
-        mainMenu.on('pointerup', () => {
-            scene.scene.stop(`${gameState.currentScene}`);
-            scene.scene.stop("PauseScene");
-            scene.scene.start("MenuScene");
-		});
-        if(gameState.kills> gameState.highestKills){
-            gameState.highestKills = gameState.kills;
-        }
-        var highestKills = this.add.text(window.innerWidth/2-90, window.innerHeight/2+105, `${gameState.highestKills}`, {
-            fill: 'WHITE', 
-            fontSize: `30px`,
-            fontFamily: 'Qahiri',
-            strokeThickness: 4,
-        }).setDepth(window.innerHeight+3);
-        gameState.save();
 	}
     update(){
         
@@ -39,29 +27,32 @@ class PauseScene extends Phaser.Scene {
 }
 
 
-
-
-class DeathScene extends Phaser.Scene {
+class BuildScene extends Phaser.Scene {
     constructor() {
-		super({ key: 'DeathScene' })
+		super({ key: 'BuildScene' })
 	}
     preload(){
         
     }
     create() {
-        this.scene.bringToTop();
-        this.add.image(window.innerWidth/2,window.innerHeight/2,'deathMenu');
-        var scene = this;
-        if(gameState.kills> gameState.highestKills){
-            gameState.highestKills = gameState.kills;
+        
+        function createTowerIcon(scene,i){
+            var tower = scene.physics.add.sprite(10+i*60,565,`${gameState.gameTowers[i].sprite}`).setOrigin(0,0).setInteractive();
+            tower.setScale(50/tower.height);
+            tower.setFrame(1);
+            tower.id = i;
+            tower.on('pointerdown', function(pointer){
+                if(gameState.blueprint.active == false){
+                    gameState.blueprint.create(gameState.arena,gameState.gameTowers[tower.id],);
+                }
+            });
         }
-        var mainMenu = this.add.image(window.innerWidth/2,window.innerHeight/2+200,'pauseMainMenuButton').setInteractive();
-        mainMenu.on('pointerup', () => {
-            scene.scene.stop(`${gameState.currentScene}`);
-            scene.scene.stop("DeathScene");
-            scene.scene.start("MenuScene");
-		});
-        gameState.save();
+        this.scene.bringToTop();
+        this.add.image(0,675-120,'buyTowersBg').setOrigin(0,0);
+        for (var i = 0; i < gameState.gameTowers.length; i++){
+            createTowerIcon(this,i);
+        }
+        gameState.selected.checkLoop(this);
 	}
     update(){
         

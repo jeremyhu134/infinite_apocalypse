@@ -1,7 +1,7 @@
 const config = {
     type: Phaser.AUTO,
-    width : window.innerWidth-10,
-    height: window.innerHeight-10,
+    width : 1200,
+    height: 675,
     backgroundColor: "#999999",
     audio: {
         disableWebAudio: true
@@ -10,11 +10,11 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 0 },
-            enableBody: true
+            enableBody: true,
             //debug: true
         }
     },
-    scene:[MenuScene,PauseScene,ArenaScene,UpgradeScene,DeathScene,ShopScene],
+    scene:[MenuScene,PauseScene,ArenaScene,BuildScene],
     scale: {
         zoom: 1,
         mode: Phaser.Scale.FIT,
@@ -24,1076 +24,2503 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-
 let gameState = {
-    coins: 150,
-    coinsAdd: 3,
+    money : 200,
+    wave: 0,
     characterStats: {
-        speed : 150,
-        health: 100,
-        ammo: 25,
-        fireRate: 175,
-        damage: 25,
-        bulletSpeed: 1000,
-        fireReady: true
+        speed : 100,
+        health: 100
     },
-    speed : 150,
-    health: 100,
-    ammo: 25,
-    fireRate: 175,
-    damage: 25,
-    bulletSpeed: 1000,
-    kills: 0,
-    highestKills:0,
-    bossSummonKills: 0,
-    disableReload: false,
+    invisibleTarget : null,
     
-    skin: 'character',
-    bulletSkin: 'bullet1',
-    
-    weaponSkins: {
-        goldenGun : {
-            owned: 0,
-            name: 'characterGoldenGun',
-            nameB: 'bulletGolden'
-        },
-        sus : {
-            owned: 0,
-            name: 'characterSus'
+    createBackground : function (scene){
+        var num = Math.ceil(Math.random ()*3);
+        if(num == 1){
+            scene.add.image(0,0, 'grassFieldBackground').setOrigin(0,0).setScale((window.innerHeight-10)/675);
+        }
+        else if(num == 2){
+            scene.add.image(0,0, 'caveBackground').setOrigin(0,0).setScale((window.innerHeight-10)/675);
+        }
+        else if(num == 3){
+            scene.add.image(0,0, 'canyonBackground').setOrigin(0,0).setScale((window.innerHeight-10)/675);
         }
     },
-    
-    upgradeCosts: function(current, max, factor){
-        var cost;
-        cost = (((current-max)+factor)/factor)*100;
-        return cost;
-    },
-    
-    
-    updateStats: function(){
-        //resets players stats
-        gameState.coinsAdd = 3;
-        gameState.speed = gameState.characterStats.speed;
-        gameState.health = gameState.characterStats.health;
-        gameState.ammo = gameState.characterStats.ammo;
-        gameState.fireRate = gameState.characterStats.fireRate;
-        gameState.damage = gameState.characterStats.damage;
-        gameState.kills = 0;
-        gameState.characterStats.fireReady = true;
-        gameState.disableReload = false;
-        
-        
-        //reset zombie stats
-        gameState.zombie.speed =  75;
-        gameState.zombie.health =  100;
-        gameState.bossSummonKills = 0;
-    },
-    
-    
-    //saves variable values to local storage
-    save: function(){
-        localStorage.setItem(1, gameState.coins);
-        localStorage.setItem(2, gameState.characterStats.health);
-        localStorage.setItem(3, gameState.characterStats.damage);
-        localStorage.setItem(4, gameState.characterStats.ammo);
-        localStorage.setItem(5, gameState.characterStats.speed);
-        localStorage.setItem(6, gameState.weaponSkins.goldenGun.owned);
-        localStorage.setItem(7, gameState.highestKills);
-        localStorage.setItem(8, gameState.weaponSkins.sus.owned);
-    },
-    //loads variable values from localstorage
-    loadSave: function(){
-        if(localStorage.getItem(1)){//If variable exists in localStorage
-            gameState.coins = parseInt(localStorage.getItem(1));
-        }
-        if(localStorage.getItem(2)){//If variable exists in localStorage
-            gameState.characterStats.health = parseInt(localStorage.getItem(2));
-        }
-        if(localStorage.getItem(3)){//If variable exists in localStorage
-            gameState.characterStats.damage = parseInt(localStorage.getItem(3));
-        }
-        if(localStorage.getItem(4)){//If variable exists in localStorage
-            gameState.characterStats.ammo = parseInt(localStorage.getItem(4));
-        }
-        if(localStorage.getItem(5)){//If variable exists in localStorage
-            gameState.characterStats.speed = parseInt(localStorage.getItem(5));
-        }
-        if(localStorage.getItem(6)){//If variable exists in localStorage
-            gameState.weaponSkins.goldenGun.owned = parseInt(localStorage.getItem(6));
-        }
-        if(localStorage.getItem(7)){//If variable exists in localStorage
-            gameState.highestKills = parseInt(localStorage.getItem(7));
-        }
-        if(localStorage.getItem(8)){//If variable exists in localStorage
-            gameState.weaponSkins.sus.owned = parseInt(localStorage.getItem(8));
-        }
-    },
-    
     
     chracterControls : function(scene){
-        if(gameState.health > 0){
-            gameState.character.depth = gameState.character.y-50;
+        if(gameState.characterStats.health > 0){
+            gameState.healthText.setText(`${gameState.characterStats.health}`);
+            gameState.character.depth = gameState.character.y+16;
             gameState.character.body.checkWorldBounds();
-            if(gameState.character.body.velocity.x == 0 && gameState.character.body.velocity.y == 0){
-                gameState.character.anims.play(`${gameState.skin}`+'Idle',true);
+            if(gameState.character.body.velocity.x == 0){
+                gameState.character.anims.play('characterIdle',true);
             }
             if(gameState.keys.W.isDown){
-                gameState.character.anims.play(`${gameState.skin}`+'Walk',true);
+                gameState.character.anims.play('characterWalk',true);
                 gameState.character.setVelocityY(-gameState.characterStats.speed);
             }
             else if(gameState.keys.S.isDown){
-                gameState.character.anims.play(`${gameState.skin}`+'Walk',true);
+                gameState.character.anims.play('characterWalk',true);
                 gameState.character.setVelocityY(gameState.characterStats.speed);
             }
             else {
                 gameState.character.setVelocityY(0);
             }
             if(gameState.keys.A.isDown){
-                gameState.character.anims.play(`${gameState.skin}`+'Walk',true);
+                gameState.character.flipX = true;
+                gameState.character.anims.play('characterWalk',true);
                 gameState.character.setVelocityX(-gameState.characterStats.speed);
             }
             else if(gameState.keys.D.isDown){
-                gameState.character.anims.play(`${gameState.skin}`+'Walk',true);
+                gameState.character.flipX = false;
+                gameState.character.anims.play('characterWalk',true);
                 gameState.character.setVelocityX(gameState.characterStats.speed);
             }
             else {
                 gameState.character.setVelocityX(0);
             }
-            if(gameState.input.x > gameState.character.x){
-                gameState.character.flipX = false;
+            
+        }
+        else {
+            gameState.character.destroy();
+            scene.physics.pause();
+            scene.time.addEvent({
+                delay: 3000,
+                callback: ()=>{
+                    location.reload();
+                    /*scene.scene.stop('ArenaScene');
+                    scene.scene.start('MenuScene');*/
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
+        }
+    },
+    
+    updateMoney:function(){
+        gameState.moneyText.setText(`${gameState.money}`);
+    },
+    
+    createIcons: function (scene){
+        scene.add.image(window.innerWidth-200,10,'moneySign').setOrigin(0,0).setDepth(window.innerHeight+3);
+        gameState.moneyText = scene.add.text( window.innerWidth - 160, 5, `${gameState.money}`, {
+            fill: '#OOOOOO', 
+            fontSize: '30px',
+            fontFamily: 'Qahiri',
+            strokeThickness: 10,
+        }).setDepth(window.innerHeight+3);
+        scene.add.image(window.innerWidth-320,10,'healthSign').setOrigin(0,0).setDepth(window.innerHeight+3);
+        gameState.healthText = scene.add.text( window.innerWidth - 285, 5, `${gameState.characterStats.health}`, {
+            fill: '#OOOOOO', 
+            fontSize: '30px',
+            fontFamily: 'Qahiri',
+            strokeThickness: 10,
+        }).setDepth(window.innerHeight+3);
+        scene.add.image(window.innerWidth-440,10,'waveSign').setOrigin(0,0).setDepth(window.innerHeight+3);
+        gameState.waveText = scene.add.text( window.innerWidth - 390, 5, `${gameState.wave}`, {
+            fill: '#OOOOOO', 
+            fontSize: '30px',
+            fontFamily: 'Qahiri',
+            strokeThickness: 10,
+        }).setDepth(window.innerHeight+3);
+        var button = scene.add.image(window.innerWidth-75,10,'pauseSign').setOrigin(0,0).setDepth(window.innerHeight+3).setInteractive();
+        button.on('pointerdown', function(pointer){
+            scene.scene.pause('ArenaScene');
+            scene.scene.launch('PauseScene');
+        });
+    },
+    
+    
+    blueprint:{
+        active: false,
+        button: null,
+        building: null,
+        overLap: 1,
+        toggleOff:function(blueprintSprite){
+            gameState.blueprint.active = false;
+            gameState.blueprintSprite.destroy();
+            gameState.blueprint.button.destroy();
+        },
+        create: function(scene,towerStats){
+            gameState.blueprint.active = true;
+            gameState.blueprintSprite = scene.physics.add.sprite(scene.input.x,scene.input.y,`${towerStats.sprite}`).setInteractive().setDepth(10000);
+            gameState.blueprintSprite.body.offset.x = towerStats.levels.lvl1.offsetx;
+            gameState.blueprintSprite.body.offset.y = towerStats.levels.lvl1.offsety;
+            gameState.blueprintSprite.body.width = towerStats.levels.lvl1.width;
+            gameState.blueprintSprite.body.height = towerStats.levels.lvl1.height;
+            gameState.blueprint.building = towerStats;
+            gameState.blueprint.button = gameState.blueprintSprite.on('pointerdown', function(pointer){
+                if(gameState.money >= towerStats.levels.lvl1.cost && gameState.blueprint.overLap >5){
+                    gameState.money -= towerStats.levels.lvl1.cost;
+                    towerStats.spawnTower                                                               (gameState.globalScene,towerStats);
+                    gameState.updateMoney();
+                }
+                else if(gameState.blueprintSprite.x <= 100 && gameState.blueprintSprite.x >= window.innerWidth-100){
+                    gameState.createTempText(scene,10,window.innerHeight/2,"!!!CANT BUILD INSIDE THE SPAWN ZONE!!!",2500,18);
+                }
+                else if(gameState.money < towerStats.cost){
+                    gameState.createTempText(scene,10,10,`Building Costs : $${gameState.blueprint.building.cost}`,3000,25);
+                }
+            });
+            gameState.blueprintOverlapCheck = scene.physics.add.overlap(gameState.blueprintSprite, gameState.buildings,()=>{
+                gameState.blueprint.overLap = 0;
+            });
+            gameState.blueprintOverlapCheck1 = scene.physics.add.overlap(gameState.blueprintSprite, gameState.zombies,()=>{
+                gameState.blueprint.overLap = 0;
+            });
+            gameState.blueprintOverlapCheck2 = scene.physics.add.overlap(gameState.blueprintSprite, gameState.character,()=>{
+                gameState.blueprint.overLap = 0;
+            });
+        },
+        checkControls: function (scene){
+            if(gameState.blueprint.active == true){
+                gameState.blueprint.overLap += 1;
+                gameState.blueprintSprite.x = scene.input.x;
+                gameState.blueprintSprite.y = scene.input.y;
+                
+            }
+            if(gameState.keys.ESC.isDown && gameState.blueprint.active == true){
+                gameState.blueprint.toggleOff(gameState.blueprintSprite);
+                gameState.blueprintOverlapCheck.destroy();
+                gameState.blueprintOverlapCheck1.destroy();
+                gameState.blueprintOverlapCheck2.destroy();
+            }
+            if(gameState.keys.ESC.isDown){
+                gameState.selected.select = null;
+            }
+            else if(gameState.keys.ONE.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'factory',gameState.factoryStats);
+            }
+            else if(gameState.keys.TWO.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'woodWall',gameState.woodWallStats);
+                gameState.blueprintSprite.body.offset.y = 15;
+                gameState.blueprintSprite.body.height = 15;
+            }
+            else if(gameState.keys.THREE.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'gatlingTower',gameState.gatlingTowerStats);
+            }
+            else if(gameState.keys.FOUR.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'electroTower',gameState.electroTowerStats);
+                gameState.blueprintSprite.body.offset.y = 30;
+                gameState.blueprintSprite.body.height = 40;
+            }
+            else if(gameState.keys.FIVE.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'barracks',gameState.barrackStats);
+            }
+            else if(gameState.keys.SIX.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'sniperTower',gameState.sniperTowerStats);
+                gameState.blueprintSprite.body.offset.y = 85;
+                gameState.blueprintSprite.body.height = 50;
+            }
+            else if(gameState.keys.SEVEN.isDown && gameState.blueprint.active == false){
+                gameState.blueprint.create(scene,'alienTower',gameState.alienTowerStats);
+            }
+        }
+    },
+    
+    selected:{
+        select: null,
+        image: null,
+        upgradeButton: null,
+        sellButton: null,
+        setInfo: function(scene, selected){
+            gameState.selected.select = selected;
+        },
+        checkLoop: function(scene){
+            var icon = scene.add.sprite(700,615,'');
+            var text = scene.add.text(750, 615, '', {
+                fill: '#000000', 
+                fontSize: `20px`,
+                fontFamily: 'Qahiri',
+                strokeThickness: 2,
+                wordWrap: { width: 300 }
+            }).setDepth(2).setOrigin(0,0.5);
+            var upgradeButton = scene.add.sprite(1100,615,'upgradeTowerIcon').setInteractive();
+            upgradeButton.on('pointerdown', function(pointer){
+                gameState.selected.select.towerStats.upgradeTower(scene,gameState.selected.select);
+            });
+            scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(gameState.selected.select !== null && gameState.selected.select.health > 0){
+                        text.setText(`${gameState.selected.select.currentLevel.name}         ${gameState.selected.select.health}/${gameState.selected.select.currentLevel.health}`);
+                        icon.setTexture(`${gameState.selected.select.towerStats.sprite}`);
+                        if(gameState.selected.select.currentLevel.width > gameState.selected.select.currentLevel.height){
+                            icon.scale = 50/gameState.selected.select.currentLevel.width;
+                        }else{
+                            icon.scale = 50/gameState.selected.select.currentLevel.height;  
+                        }
+                        icon.setFrame(1);
+                    }else{
+                        text.setText('');
+                        icon.setTexture('');
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });
+        },
+    },
+    
+    
+    spawnZombies: function(scene,stats,count){
+        if(count > 0){
+            scene.time.addEvent({
+                delay: 100,
+                callback: ()=>{
+                    var random = Math.ceil(Math.random()*2);
+                    if(random == 1){
+                        stats.spawnZombie(scene,Math.random()*50+50,Math.random()*window.innerHeight);
+                    }
+                    else {
+                        stats.spawnZombie(scene,window.innerWidth-(Math.random()*50+50),Math.random()*window.innerHeight);
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: count-1
+            });
+        }
+    },
+    commenceWaves: function (scene){
+        scene.time.addEvent({
+            delay: 0,
+            callback: ()=>{
+                gameState.waveLoop = scene.time.addEvent({
+                    delay: 30000,
+                    callback: ()=>{
+                        gameState.wave += 1;
+                        gameState.waveText.setText(`${gameState.wave}`);
+                        if(gameState.wave == 1){
+                            scene.time.addEvent({
+                                delay: 1000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 4
+                            }); 
+                        }else if(gameState.wave == 2){
+                            scene.time.addEvent({
+                                delay: 1000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                        }else if(gameState.wave == 3){
+                            scene.time.addEvent({
+                                delay: 1000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 19
+                            }); 
+                        }else if(gameState.wave == 4){
+                            scene.time.addEvent({
+                                delay: 1000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 24
+                            }); 
+                        }
+                        else if(gameState.wave == 5){
+                            scene.time.addEvent({
+                                delay: 1000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 29
+                            }); 
+                        }else if(gameState.wave == 6){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 29
+                            }); 
+                        }else if(gameState.wave == 7){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 4
+                            }); 
+                        }else if(gameState.wave == 8){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                        }
+                        else if(gameState.wave == 9){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 4
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 14
+                            }); 
+                        }
+                        else if(gameState.wave == 10){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 24
+                            }); 
+                        }else if(gameState.wave == 11){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 49
+                            }); 
+                        }else if(gameState.wave == 12){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 24
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 24
+                            });
+                        }else if(gameState.wave == 13){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieGiantStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            });
+                        }else if(gameState.wave == 14){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieGiantStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 19
+                            });
+                        }else if(gameState.wave == 15){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieGiantStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            }); 
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombieMuskateerStats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: 9
+                            });
+                        }else if(gameState.wave > 15){
+                            scene.time.addEvent({
+                                delay: 2000,
+                                callback: ()=>{
+                                    gameState.spawnZombies(scene,gameState.zombie1Stats,1);
+                                },  
+                                startAt: 0,
+                                timeScale: 1,
+                                repeat: gameState.wave
+                            }); 
+                        }
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+            },  
+            startAt: 0,
+            timeScale: 1
+        }); 
+    },
+    
+    zombie1Stats:{
+        name: "Zombie",
+        speed: 20,
+        health: 100,
+        damage: 5,
+        attackRange: 20,
+        attackSpeed: 1000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombie1`).setDepth(1);
+            zombie.anims.play(`zombie1Spawn`);
+            zombie.health = gameState.zombie1Stats.health;
+            gameState.createHealthBar(scene,zombie,gameState.zombie1Stats.health);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombie1Stats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombie1Stats.speed);
+            zombie.anims.play('zombie1Walk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target){
+            if(target == gameState.character){
+                gameState.characterStats.health -= gameState.zombie1Stats.damage;
             }
             else {
-                gameState.character.flipX = true;
+                target.health -= gameState.zombie1Stats.damage;
             }
-            if (gameState.keys.SPACE.isDown && gameState.ammo > 0){
-                if (gameState.characterStats.fireReady == true){
-                    gameState.ammo --;
-                    gameState.characterStats.fireReady = false;
-                    var flash;
-                    var bullet;
-                    if (gameState.character.flipX == false){
-                        flash = scene.physics.add.sprite(gameState.character.x + 43, gameState.character.y+10,'gunFlash').setDepth(1);
-                        bullet = gameState.bullets.create(gameState.character.x + 37,gameState.character.y+5,`${gameState.bulletSkin}`);
-                    }else {
-                        flash = scene.physics.add.sprite(gameState.character.x - 25, gameState.character.y+10,'gunFlash').setDepth(1);
-                        flash.flipX = true;
-                        bullet = gameState.bullets.create(gameState.character.x-25,gameState.character.y+5,`${gameState.bulletSkin}`);
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
                     }
-                    var rand = Math.ceil(Math.random()*3);
-                    if (rand == 1){
-                        flash.anims.play('flash1','true');
-                    }else if (rand == 2){
-                        flash.anims.play('flash2','true');
-                    }else {
-                        flash.anims.play('flash3','true');
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                //target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            var target = gameState.zombie1Stats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombie1Stats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombie1Stats.attack(scene,target);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombie1Stats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombie1Stats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombie1Stats.movement(scene,zombie,target);
+                        }
                     }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombie1Death',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    zombieGiantStats:{
+        name: "Zombie Giant",
+        speed: 20,
+        health: 600,
+        damage: 25,
+        attackRange: 30,
+        attackSpeed: 3000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieGiant`).setDepth(1);
+            zombie.anims.play(`zombieGiantSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieGiantStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieGiantStats.speed);
+            zombie.anims.play('zombieGiantWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target){
+            if(target == gameState.character){
+                gameState.characterStats.health -= gameState.zombieGiantStats.damage;
+            }
+            else {
+                target.health -= gameState.zombieGiantStats.damage;
+            }
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieGiantStats.health;
+            var target = gameState.zombieGiantStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieGiantStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieGiantStats.attack(scene,target);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieGiantStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieGiantStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieGiantStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombieGiantDeath',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    zombieBomberStats:{
+        name: "Zombie Bomber",
+        speed: 100,
+        health: 75,
+        damage: 100,
+        attackRange: 100,
+        attackSpeed: 1,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieBomber`).setDepth(1);
+            zombie.anims.play(`zombieBomberSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieBomberStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieBomberStats.speed);
+            zombie.anims.play('zombieBomberWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target,zombie){
+            for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                var dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                if(dist<gameState.zombieBomberStats.attackRange){
+                    gameState.buildings.getChildren()[i].health -= gameState.zombieBomberStats.damage;
+                }
+            }
+            var dist = Phaser.Math.Distance.BetweenPoints(gameState.character, zombie);
+            if(dist<50){
+                gameState.characterStats.health -= gameState.zombieBomberStats.damage;
+            }
+            zombie.health = 0;
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                //target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieBomberStats.health;
+            var target = gameState.zombieBomberStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieBomberStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieBomberStats.attack(scene,target,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieBomberStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieBomberStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieBomberStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        gameState.createExplosion(scene, zombie.x,zombie.y);
+                        zombie.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    zombieKingStats:{
+        name: "Zombie King",
+        speed: 10,
+        health: 50000,
+        damage: 500,
+        attackRange: 100,
+        attackSpeed: 3000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieKing`).setDepth(0);
+            zombie.setDepth(zombie.y);
+            zombie.body.offset.y = 100;
+            zombie.body.height = 100;
+            zombie.anims.play(`zombieKingSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieKingStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieKingStats.speed);
+            zombie.anims.play('zombieKingWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target){
+            if(target == gameState.character){
+                gameState.characterStats.health -= gameState.zombieKingStats.damage;
+            }
+            else {
+                target.health -= gameState.zombieKingStats.damage;
+            }
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieKingStats.health;
+            zombie.setDepth(zombie.y);
+            var target = gameState.zombieKingStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieKingStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieKingStats.attack(scene,target);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieKingStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieKingStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieKingStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombieKingDeath',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    zombieWizardStats:{
+        name: "Zombie Wizard",
+        speed: 25,
+        health: 1500,
+        damage: 25,
+        attackRange: 200,
+        attackSpeed: 1500,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(Math.random()*11,Math.random()*window.innerHeight-32,`zombieWizard`).setDepth(1);
+            zombie.anims.play(`zombieWizardSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieWizardStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieWizardStats.speed);
+            zombie.anims.play('zombieWizardWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target,zombie){
+            var bullet = gameState.bullets.create(zombie.x,zombie.y,'zombieWizardBall');
+            gameState.angle=Phaser.Math.Angle.Between(zombie.x,zombie.y,target.x,target.y);
+            bullet.setRotation(gameState.angle); 
+            scene.physics.moveTo(bullet,target.x,target.y,300);
+            var bulletLoop = scene.time.addEvent({
+                delay: 10000,
+                callback: ()=>{
+                    bullet.destroy();
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
+            scene.physics.add.overlap(bullet, gameState.buildings,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                targ.health -= gameState.zombieWizardStats.damage;
+            });
+            scene.physics.add.overlap(bullet, gameState.character,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                gameState.characterStats.health -= gameState.zombieWizardStats.damage;
+            });
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieWizardStats.health;
+            var target = gameState.zombieWizardStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var spawnLoop = scene.time.addEvent({
+                delay: 10000,
+                callback: ()=>{
                     scene.time.addEvent({
-                        delay: 10,
+                        delay: 1,
                         callback: ()=>{
-                            flash.destroy();
+                            gameState.zombie1Stats.spawnZombie(scene,zombie.x+(Math.random()*200-100),zombie.y+(Math.random()*200-100));
                         },  
                         startAt: 0,
-                        timeScale: 1
+                        timeScale: 1,
+                        repeat: 3
                     });
-                    gameState.angle=Phaser.Math.Angle.Between(bullet.x,bullet.y,scene.input.x,scene.input.y);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieWizardStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieWizardStats.attack(scene,target,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieWizardStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieWizardStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieWizardStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        spawnLoop.destroy();
+                        zombie.anims.play('zombieWizardDeath',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+        
+    zombieMuskateerStats:{
+        name: "Zombie Muskateer",
+        speed: 30,
+        health: 100,
+        damage: 5,
+        attackRange: 150,
+        attackSpeed: 2000,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieMuskateer`).setDepth(1);
+            zombie.anims.play(`zombieMuskateerSpawn`);
+            zombie.health = gameState.zombieMuskateerStats.health;
+            gameState.createHealthBar(scene,zombie,gameState.zombieMuskateerStats.health);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.zombieMuskateerStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieMuskateerStats.speed);
+            zombie.anims.play('zombieMuskateerWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target,zombie){
+            var bullet = gameState.bullets.create(zombie.x,zombie.y,'bullet');
+            gameState.angle=Phaser.Math.Angle.Between(zombie.x,zombie.y,target.x,target.y);
+            bullet.setRotation(gameState.angle); 
+            scene.physics.moveTo(bullet,target.x+target.currentLevel.offsetx ,target.y+target.currentLevel.offsety- target.currentLevel.height,300);
+            var bulletLoop = scene.time.addEvent({
+                delay: 10000,
+                callback: ()=>{
+                    bullet.destroy();
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
+            scene.physics.add.overlap(bullet, gameState.buildings,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                targ.health -= gameState.zombieMuskateerStats.damage;
+            });
+            scene.physics.add.overlap(bullet, gameState.character,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                gameState.characterStats.health -= gameState.zombieMuskateerStats.damage;
+            });
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                //target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            var target = gameState.zombieMuskateerStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieMuskateerStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieMuskateerStats.attack(scene,target,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieMuskateerStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieMuskateerStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                            zombie.anims.play('zombieMuskateerAction',true);
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieMuskateerStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombieMuskateerDeath',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    zombieDogStats:{
+        name: "Zombie Dog",
+        speed: 125,
+        health: 50,
+        damage: 10,
+        attackRange: 20,
+        attackSpeed: 500,
+        spawnZombie: function(scene,x,y){
+            var zombie = gameState.zombies.create(x,y,`zombieDog`).setDepth(1);
+            zombie.anims.play(`zombieDogSpawn`);
+            scene.time.addEvent({
+                delay: 300,
+                callback: ()=>{
+                    gameState.zombieDogStats.behaviourLoop(scene,zombie);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,zombie,target){
+            scene.physics.moveTo(zombie,target.x, target.y,gameState.zombieDogStats.speed);
+            zombie.anims.play('zombieDogWalk',true);
+            if(target.x > zombie.x){
+                zombie.flipX = false;
+            }
+            else if(target.x < zombie.x){
+                zombie.flipX = true;
+            }
+        },
+        attack: function (scene, target){
+            if(target == gameState.character){
+                gameState.characterStats.health -= gameState.zombieDogStats.damage;
+            }
+            else {
+                target.health -= gameState.zombieDogStats.damage;
+            }
+        },
+        findTarget: function(scene,zombie){
+            var dist;
+            var closest = 10000;
+            var target = gameState.character;
+            if( gameState.buildings.getChildren().length >0){
+                for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], zombie);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.buildings.getChildren()[i];
+                    }
+                }
+            }
+            if(Phaser.Math.Distance.BetweenPoints(gameState.character, zombie) < closest){
+                target = gameState.character;
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,zombie){
+            zombie.health = gameState.zombieDogStats.health;
+            var target = gameState.zombieDogStats.findTarget(scene,zombie);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+            var loop = scene.time.addEvent({
+                delay: gameState.zombieDogStats.attackSpeed,
+                callback: ()=>{
+                    gameState.zombieDogStats.attack(scene,target);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(zombie.health > 0){
+                        target = gameState.zombieDogStats.findTarget(scene,zombie);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, zombie);
+                        if(dist < gameState.zombieDogStats.attackRange){
+                            zombie.setVelocityX(0);
+                            zombie.setVelocityY(0);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            gameState.zombieDogStats.movement(scene,zombie,target);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        zombie.anims.play('zombieDogDeath',true);
+                        zombie.setVelocityX(0);
+                        zombie.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            zombie.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+
+    
+    
+    createExplosion: function(scene,x,y){
+        var explode = scene.physics.add.sprite(x,y,`buildingExplosion`);
+        explode.anims.play('explode',true);
+        scene.time.addEvent({
+            delay: 1000,
+            callback: ()=>{
+                explode.destroy();
+            },  
+            startAt: 0,
+            timeScale: 1
+        }); 
+    },
+    
+    
+    gameTowers:[
+        //machineGunStats
+        {
+            levels:{
+                lvl1:{
+                    lvl:1,
+                    cost: 50,
+                    damage: 5,
+                    health: 50,
+                    attackRange: 150,
+                    attackSpeed: 200,
+                    offsetx: 10,
+                    offsety: 50,
+                    width: 60,
+                    height: 20,
+                    name: 'MachineGunTower I'
+                },
+                lvl2:{
+                    lvl:2,
+                    cost: 100,
+                    damage: 6,
+                    health: 90,
+                    attackRange: 160,
+                    attackSpeed: 175,
+                    offsetx: 10,
+                    offsety: 50,
+                    width: 60,
+                    height: 20,
+                    name: 'MachineGunTower II'
+                },
+                lvl3:{
+                    lvl:3,
+                    cost: 200,
+                    damage: 7,
+                    health: 130,
+                    attackRange: 170,
+                    attackSpeed: 125,
+                    offsetx: 10,
+                    offsety: 50,
+                    width: 60,
+                    height: 20,
+                    name: 'MachineGunTower III'
+                }
+            },
+            sprite: 'machineGunTower',
+            attackType: 'normal',
+            buildingType: 'tower',
+
+
+            spawnTower: function(scene,towerStats){
+                var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'machineGunTower').setDepth(scene.input.y).setImmovable().setInteractive();
+                tower.setFrame(1);
+                tower.health = towerStats.levels.lvl1.health;
+                tower.active = true;
+                tower.towerStats = towerStats;
+                tower.body.offset.x = towerStats.levels.lvl1.offsetx;
+                tower.body.offset.y = towerStats.levels.lvl1.offsety;
+                tower.body.width = towerStats.levels.lvl1.width;
+                tower.body.height = towerStats.levels.lvl1.height;
+                tower.currentLevel = towerStats.levels.lvl1;
+                tower.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.selected.setInfo(scene,tower);
+                    }
+                });
+                gameState.createHealthBar(scene,tower,towerStats.levels.lvl1.health);
+                gameState.gameTowers[0].action(scene,tower);
+            },
+            upgradeTower: function(scene,tower){
+               if(tower.currentLevel.lvl == 1 && gameState.money >= tower.towerStats.levels.lvl2.cost){
+                   gameState.money -= tower.towerStats.levels.lvl2.cost;
+                    tower.destroyHB();
+                    tower.health = tower.towerStats.levels.lvl2.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl2;
+                    gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                    tower.attackLoop.delay = tower.currentLevel.attackSpeed;
+                }else if(tower.currentLevel.lvl == 2 && gameState.money >= tower.towerStats.levels.lvl3.cost){
+                    gameState.money -= tower.towerStats.levels.lvl3.cost;
+                    tower.destroyHB();
+                    tower.health = tower.towerStats.levels.lvl3.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl3;
+                    gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                    tower.attackLoop.delay = tower.currentLevel.attackSpeed;
+                } 
+            },
+            findTarget: function(scene,building){
+                var dist;
+                var closest = 10000;
+                var target = gameState.invisibleTarget;
+                if(gameState.zombies.getChildren().length > 0){
+                    for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                        dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                        if(dist<closest){
+                            closest = dist;
+                            target = gameState.zombies.getChildren()[i];
+                        }
+                    }
+                }
+                return target;
+            },
+            action: function(scene,building){
+                var target = building.towerStats.findTarget(scene,building);
+                var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                building.attackLoop = scene.time.addEvent({
+                    delay: building.currentLevel.attackSpeed,
+                    callback: ()=>{
+                        var bullet = gameState.bullets.create(building.x,building.y,'bullet');
+                        gameState.angle=Phaser.Math.Angle.Between(building.x,building.y,target.x,target.y);
+                        bullet.setRotation(gameState.angle); 
+                        scene.physics.moveTo(bullet,target.x +(Math.random()*6-10),target.y +(Math.random()*6-10),300);
+                        var bulletLoop = scene.time.addEvent({
+                            delay: 8000,
+                            callback: ()=>{
+                                bullet.destroy();
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        });
+                        scene.physics.add.overlap(bullet, gameState.zombies,(bull, targ)=>{
+                            bulletLoop.destroy();
+                            bull.destroy();
+                            targ.health -= building.currentLevel.damage;
+                        });
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+                building.attackLoop.paused = true;
+                var bLoop = scene.time.addEvent({
+                    delay: 1,
+                    callback: ()=>{
+                        if(building.health > 0){
+                            if(building.active == true){
+                                target = building.towerStats.findTarget(scene,building);
+                                dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                                if(dist <= building.currentLevel.attackRange){
+                                    if(target.x < building.x){
+                                        building.flipX = true;
+                                    }else {
+                                        building.flipX = false;
+                                    }
+                                    building.anims.play(`machineGunTower${building.currentLevel.lvl}Action`,true);
+                                    building.attackLoop.paused = false;
+                                }
+                                else {
+                                    building.attackLoop.paused = true;
+                                    building.anims.play(`machineGunTower${building.currentLevel.lvl}Idle`,true);
+                                }
+                            }
+                        }
+                        else {
+                            gameState.createExplosion(scene,building.x,building.y);
+                            bLoop.destroy();
+                            building.attackLoop.destroy();
+                            building.destroy(); 
+                        }
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                });  
+            }
+        },
+        //woodWallStats
+        {
+            levels:{
+                lvl1:{
+                    lvl: 1,
+                    cost: 25,
+                    damage: 0,
+                    health: 50,
+                    attackRange: 0,
+                    attackSpeed: 0,
+                    offsetx: 0,
+                    offsety: 15,
+                    width: 18,
+                    height: 15,
+                    name: 'WoodWall I'
+                },
+                lvl2:{
+                    lvl: 2,
+                    cost: 30,
+                    damage: 0,
+                    health: 65,
+                    attackRange: 0,
+                    attackSpeed: 0,
+                    offsetx: 0,
+                    offsety: 15,
+                    width: 18,
+                    height: 15,
+                    name: 'WoodWall II'
+                },
+                lvl3:{
+                    lvl: 3,
+                    cost: 40,
+                    damage: 0,
+                    health: 80,
+                    attackRange: 0,
+                    attackSpeed: 0,
+                    offsetx: 0,
+                    offsety: 15,
+                    width: 18,
+                    height: 15,
+                    name: 'WoodWall III'
+                }
+            },
+            sprite: 'woodWall',
+            attackType: 'none',
+            buildingType: 'wall',
+            spawnTower: function(scene,towerStats){
+                var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'woodWall').setDepth(scene.input.y).setImmovable().setInteractive();
+                tower.body.offset.y = towerStats.levels.lvl1.offsety;
+                tower.body.height = towerStats.levels.lvl1.height;
+                tower.health = towerStats.levels.lvl1.health;
+                tower.currentLevel = towerStats.levels.lvl1;
+                tower.towerStats = towerStats;
+                tower.setFrame(1);
+                tower.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.selected.setInfo(scene,tower);
+                    }
+                });
+                towerStats.action(scene,tower);
+            },
+            upgradeTower: function(scene,tower){
+               if(tower.currentLevel.lvl == 1 && gameState.money >= tower.towerStats.levels.lvl2.cost){
+                    gameState.money -= tower.towerStats.levels.lvl2.cost;
+                    tower.health = tower.towerStats.levels.lvl2.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl2;
+                }else if(tower.currentLevel.lvl == 2 && gameState.money >= tower.towerStats.levels.lvl3.cost){
+                    gameState.money -= tower.towerStats.levels.lvl3.cost;
+                    tower.health = tower.towerStats.levels.lvl3.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl3;
+                } 
+            },
+            action: function(scene,building){
+                var loop1 = scene.time.addEvent({
+                    delay: 1,
+                    callback: ()=>{
+                        if(building.health <=0){
+                            gameState.createExplosion(scene,building.x,building.y);
+                            building.destroy();
+                            loop1.destroy();
+                        }else {
+                            building.setFrame(building.currentLevel.lvl);
+                        }
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+            }
+        },
+        //FactoryStats
+        {
+            levels:{
+                lvl1:{
+                    lvl: 1,
+                    cost: 100,
+                    damage: 0,
+                    health: 30,
+                    attackRange: 0,
+                    attackSpeed: 0,
+                    offsetx: 0,
+                    offsety: 0,
+                    width: 50,
+                    height: 50,
+                    name: 'Factory I'
+                },
+                lvl2:{
+                    lvl: 2,
+                    cost: 500,
+                    damage: 0,
+                    health: 400,
+                    attackRange: 0,
+                    attackSpeed: 0,
+                    offsetx: 0,
+                    offsety: 0,
+                    width: 50,
+                    height: 50,
+                    name: 'Factory II'
+                },
+                lvl3:{
+                    lvl: 3,
+                    cost: 1000,
+                    damage: 0,
+                    health: 500,
+                    attackRange: 0,
+                    attackSpeed: 0,
+                    offsetx: 0,
+                    offsety: 0,
+                    width: 50,
+                    height: 50,
+                    name: 'Factory III'
+                }
+            },
+            sprite: 'factory',
+            attackType: 'none',
+            buildingType: 'producer',
+            spawnTower: function(scene,towerStats){
+                var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'factory').setDepth(scene.input.y).setImmovable().setInteractive();
+                tower.setFrame(1);
+                tower.health = towerStats.levels.lvl1.health;
+                tower.active = true;
+                tower.towerStats = towerStats;
+                tower.body.offset.x = towerStats.levels.lvl1.offsetx;
+                tower.body.offset.y = towerStats.levels.lvl1.offsety;
+                tower.body.width = towerStats.levels.lvl1.width;
+                tower.body.height = towerStats.levels.lvl1.height;
+                tower.currentLevel = towerStats.levels.lvl1;
+                gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                tower.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.selected.setInfo(scene,tower);
+                    }
+                });
+                gameState.gameTowers[2].action(scene,tower);
+            },
+            upgradeTower: function(scene,tower){
+               if(tower.currentLevel.lvl == 1 && gameState.money >= tower.towerStats.levels.lvl2.cost){
+                   gameState.money -= tower.towerStats.levels.lvl2.cost;
+                    tower.destroyHB();
+                    tower.health = tower.towerStats.levels.lvl2.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl2;
+                    gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                }else if(tower.currentLevel.lvl == 2 && gameState.money >= tower.towerStats.levels.lvl3.cost){
+                    gameState.money -= tower.towerStats.levels.lvl3.cost;
+                    tower.destroyHB();
+                    tower.health = tower.towerStats.levels.lvl3.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl3;
+                    gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                } 
+            },
+            
+            action: function(scene,building){
+                var loop = scene.time.addEvent({
+                    delay: 5000,
+                    callback: ()=>{
+                        if(building.health >0){
+                            if(building.currentLevel.lvl == 1){
+                                gameState.money += 10;
+                            }else if(building.currentLevel.lvl == 2){
+                                gameState.money += 20;
+                            }else if(building.currentLevel.lvl == 3){
+                                gameState.money += 30;
+                            }
+                            
+                            gameState.updateMoney();
+                        }
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+                var loop1 = scene.time.addEvent({
+                    delay: 1,
+                    callback: ()=>{
+                        if(building.health <= 0){
+                            gameState.createExplosion(scene,building.x,building.y);
+                            building.destroy();
+                            loop.destroy();
+                            loop1.destroy();
+                            building.destroyHB();
+                        }else{
+                            building.anims.play(`factory${building.currentLevel.lvl}Action`,true);
+                        }
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+            }
+        },
+        //repairTowerStats
+        {
+            levels:{
+                lvl1:{
+                    lvl:1,
+                    cost: 100,
+                    damage: 0.1,
+                    health: 80,
+                    attackRange: 150,
+                    attackSpeed: 10,
+                    offsetx: 0,
+                    offsety: 0,
+                    width: 50,
+                    height: 50,
+                    name: 'Repair Tower I'
+                },
+                lvl2:{
+                    lvl:2,
+                    cost: 100,
+                    damage: 0.15,
+                    health: 85,
+                    attackRange: 150,
+                    attackSpeed: 10,
+                    offsetx: 0,
+                    offsety: 0,
+                    width: 50,
+                    height: 50,
+                    name: 'Repair Tower II'
+                },
+                lvl3:{
+                    lvl:3,
+                    cost: 100,
+                    damage: 0.2,
+                    health: 90,
+                    attackRange: 150,
+                    attackSpeed: 125,
+                    offsetx: 0,
+                    offsety: 0,
+                    width: 50,
+                    height: 50,
+                    name: 'RepairTower III'
+                }
+            },
+            sprite: 'repairTower',
+            attackType: 'heal',
+            buildingType: 'tower',
+
+
+            spawnTower: function(scene,towerStats){
+                var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'repairTower').setDepth(scene.input.y).setImmovable().setInteractive();
+                tower.setFrame(1);
+                tower.health = towerStats.levels.lvl1.health;
+                tower.active = true;
+                tower.towerStats = towerStats;
+                tower.body.offset.x = towerStats.levels.lvl1.offsetx;
+                tower.body.offset.y = towerStats.levels.lvl1.offsety;
+                tower.body.width = towerStats.levels.lvl1.width;
+                tower.body.height = towerStats.levels.lvl1.height;
+                tower.currentLevel = towerStats.levels.lvl1;
+                tower.on('pointerdown', function(pointer){
+                    if(gameState.blueprint.active == false){
+                        gameState.selected.setInfo(scene,tower);
+                    }
+                });
+                gameState.createHealthBar(scene,tower,towerStats.levels.lvl1.health);
+                towerStats.action(scene,tower);
+            },
+            upgradeTower: function(scene,tower){
+               if(tower.currentLevel.lvl == 1 && gameState.money >= tower.towerStats.levels.lvl2.cost){
+                   gameState.money -= tower.towerStats.levels.lvl2.cost;
+                    tower.destroyHB();
+                    tower.health = tower.towerStats.levels.lvl2.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl2;
+                    gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                    tower.attackLoop.delay = tower.currentLevel.attackSpeed;
+                }else if(tower.currentLevel.lvl == 2 && gameState.money >= tower.towerStats.levels.lvl3.cost){
+                    gameState.money -= tower.towerStats.levels.lvl3.cost;
+                    tower.destroyHB();
+                    tower.health = tower.towerStats.levels.lvl3.health;
+                    tower.currentLevel = tower.towerStats.levels.lvl3;
+                    gameState.createHealthBar(scene,tower,tower.currentLevel.health);
+                    tower.attackLoop.delay = tower.currentLevel.attackSpeed;
+                } 
+            },
+            findTarget: function(scene,building){
+                var dist;
+                var closest = 10000;
+                var target = gameState.invisibleTarget;
+                if(gameState.buildings.getChildren().length > 0){
+                    for (var i = 0; i < gameState.buildings.getChildren().length; i++){ 
+                        dist = Phaser.Math.Distance.BetweenPoints(gameState.buildings.getChildren()[i], building);
+                        if(dist<closest && gameState.buildings.getChildren()[i] !== building && gameState.buildings.getChildren()[i].health < gameState.buildings.getChildren()[i].currentLevel.health){
+                            closest = dist;
+                            target = gameState.buildings.getChildren()[i];
+                        }
+                    }
+                }
+                return target;
+            },
+            action: function(scene,building){
+                var target = building.towerStats.findTarget(scene,building);
+                var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                building.attackLoop = scene.time.addEvent({
+                    delay: building.currentLevel.attackSpeed,
+                    callback: ()=>{
+                        var bullet = gameState.bullets.create(building.x,building.y,'laser1');
+                        gameState.angle=Phaser.Math.Angle.Between(building.x,building.y,target.x,target.y);
+                        bullet.setRotation(gameState.angle); 
+                        scene.physics.moveTo(bullet,target.x, target.y,600);
+                        var bulletLoop = scene.time.addEvent({
+                            delay: 8000,
+                            callback: ()=>{
+                                bullet.destroy();
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        });
+                        scene.physics.add.overlap(bullet, target,(bull, targ)=>{
+                            bulletLoop.destroy();
+                            bull.destroy();
+                            targ.health += building.currentLevel.damage;
+                        });
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                }); 
+                building.attackLoop.paused = true;
+                var bLoop = scene.time.addEvent({
+                    delay: 1,
+                    callback: ()=>{
+                        if(building.health > 0){
+                            if(building.active == true){
+                                target = building.towerStats.findTarget(scene,building);
+                                dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                                if(dist <= building.currentLevel.attackRange){
+                                    if(target.x < building.x){
+                                        building.flipX = true;
+                                    }else {
+                                        building.flipX = false;
+                                    }
+                                    building.anims.play(`repairTower${building.currentLevel.lvl}Action`,true);
+                                    building.attackLoop.paused = false;
+                                }
+                                else {
+                                    building.attackLoop.paused = true;
+                                    building.anims.play(`repairTower${building.currentLevel.lvl}Idle`,true);
+                                }
+                            }
+                        }
+                        else {
+                            gameState.createExplosion(scene,building.x,building.y);
+                            bLoop.destroy();
+                            building.attackLoop.destroy();
+                            building.destroy(); 
+                        }
+                    },  
+                    startAt: 0,
+                    timeScale: 1,
+                    repeat: -1
+                });  
+            }
+        },
+    ],
+    
+    
+    sniperTowerStats:{
+        cost: 100,
+        damage: 50,
+        health: 100,
+        attackRange: 300,
+        attackSpeed: 4000,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'sniperTower').setDepth(scene.input.y+20).setImmovable();
+            tower.health = gameState.sniperTowerStats.health;
+            tower.body.offset.y = 85;
+            tower.body.height = 50;
+            gameState.sniperTowerStats.action(scene,tower);
+        },
+        findTarget: function(scene,building){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if(gameState.zombies.getChildren().length > 0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
+        action: function(scene,building){
+            var target = gameState.sniperTowerStats.findTarget(scene,building);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+            var loop = scene.time.addEvent({
+                delay: gameState.sniperTowerStats.attackSpeed,
+                callback: ()=>{
+                    var bullet = gameState.bullets.create(building.x,building.y,'bullet');
+                    gameState.angle=Phaser.Math.Angle.Between(building.x,building.y,target.x,target.y);
                     bullet.setRotation(gameState.angle); 
-                    scene.physics.moveToObject(bullet,scene.input,gameState.characterStats.bulletSpeed);
-                    //scene.physics.moveTo(bullet,scene.input.x,scene.input.y,300);
+                    scene.physics.moveTo(bullet,target.x +(Math.random()*6-10),target.y +(Math.random()*6-10),800);
                     var bulletLoop = scene.time.addEvent({
-                        delay: 5000,
+                        delay: 8000,
                         callback: ()=>{
                             bullet.destroy();
                         },  
                         startAt: 0,
                         timeScale: 1
                     });
-                    scene.physics.add.overlap(bullet, gameState.zombies,(bulletT, target)=>{
-                        var angle = Phaser.Math.Angle.Between(bulletT.x,bulletT.y,target.x,target.y);
-                        var blood = scene.physics.add.sprite(target.x+10,target.y, 'bulletBlood');
-                        blood.setRotation(angle);
-                        blood.anims.play('animate','true');
-                        scene.time.addEvent({
-                            delay: 200,
-                            callback: ()=>{
-                                blood.destroy();
-                            },  
-                            startAt: 0,
-                            timeScale: 1
-                        });
+                    scene.physics.add.overlap(bullet, gameState.zombies,(bull, targ)=>{
                         bulletLoop.destroy();
-                        bulletT.destroy();
-                        target.health -= gameState.damage;
-                    });
-                    scene.time.addEvent({
-                        delay: gameState.fireRate,
-                        callback: ()=>{
-                            gameState.characterStats.fireReady = true;
-                        },  
-                        startAt: 0,
-                        timeScale: 1
-                    });
-                }
-            }
-            else if (gameState.keys.R.isDown){
-                gameState.reload(scene);
-                
-            }
-            else {
-                if(gameState.ammo<= 0){
-                    gameState.reload(scene);
-                }
-            }
-        }
-        else {
-            gameState.spawnZombies.destroy();
-            gameState.character.destroy();
-            if(gameState.bossM){
-                gameState.bossM.setMute(true);
-            }
-            gameState.arenaM.setMute(true);
-            scene.physics.pause();
-            if(gameState.Sbutton){
-                gameState.Sbutton.destroy();
-            }
-            scene.time.addEvent({
-                delay: 3000,
-                callback: ()=>{
-                    gameState.Sbutton.destroy();
-                    gameState.globalScene.scene.pause("ArenaScene");
-                    gameState.globalScene.scene.launch('DeathScene');
-                },  
-                startAt: 0,
-                timeScale: 1
-            });
-        }
-    },
-    reload: function (scene){
-        if(gameState.characterStats.fireReady == true && gameState.disableReload == false){
-            gameState.characterStats.fireReady = false;
-            var clip = scene.physics.add.image(gameState.character.x+5, gameState.character.y+12, 'gunMagazine').setGravityY(1000);
-            if (gameState.character.x > scene.input.x){
-                clip.flipX = true;
-            }
-            clip.depth = clip.y +1;
-            gameState.ammo = gameState.characterStats.ammo;
-            scene.time.addEvent({
-                delay: 2500,
-                callback: ()=>{
-                    gameState.characterStats.fireReady = true;
-                },  
-                startAt: 0,
-                timeScale: 1
-            });
-            scene.time.addEvent({
-                delay: 200,
-                callback: ()=>{
-                    clip.setGravityY(0);
-                    clip.setVelocityY(0);
-                    scene.time.addEvent({
-                        delay: 3000,
-                        callback: ()=>{
-                            clip.destroy();
-                        },  
-                        startAt: 0,
-                        timeScale: 1
+                        bull.destroy();
+                        targ.health -= gameState.sniperTowerStats.damage;
                     });
                 },  
                 startAt: 0,
-                timeScale: 1
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                    }
+                    else {
+                        gameState.sniperTowerStats.findTarget(scene,building)
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
             });
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health > 0){
+                        target = gameState.sniperTowerStats.findTarget(scene,building);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                        if(dist < gameState.sniperTowerStats.attackRange){
+                            if(target.x < building.x){
+                                building.flipX = true;
+                            }else {
+                                building.flipX = false;
+                            }
+                            building.anims.play('sniperTowerAction',true);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            building.anims.play('sniperTowerIdle',true);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                        building.destroy(); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });  
         }
     },
     
-    createItem: function(scene,x,y){
-        var random = Math.ceil(Math.random()*100);
-        if(random <= 50){
-            var coin = scene.physics.add.sprite(x,y,'coin');
-            coin.anims.play('canimate','true');
-            var gone = scene.time.addEvent({
-                delay: 10000,
+    electroTowerStats:{
+        cost: 300,
+        damage: 25,
+        health: 150,
+        attackRange: 175,
+        attackSpeed: 4000,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'electroTower').setDepth(scene.input.y).setImmovable();
+            tower.body.offset.y = 30;
+            tower.body.height = 40;
+            tower.health = gameState.electroTowerStats.health;
+            gameState.electroTowerStats.action(scene,tower);
+        },
+        
+        createElectricWave: function(scene,x,y){
+            var wave = scene.physics.add.sprite(x,y,`electricWave`);
+            wave.anims.play('electricWaveAction',true);
+            scene.time.addEvent({
+                delay: 333,
                 callback: ()=>{
-                    coin.destroy();
+                    wave.destroy();
                 },  
                 startAt: 0,
                 timeScale: 1
-            });
-            scene.physics.add.overlap(gameState.character, coin,(character, coin)=>{
-                var rand = Math.ceil(Math.random()*2)+gameState.coinsAdd;
-                gameState.coins += rand;
-                coin.destroy();
-                gone.destroy();
-            });
-        }
-        else if(random<=100 && random >=96){
-            var iBI = scene.physics.add.sprite(x,y,'infiniteBulletsImage');
-            iBI.anims.play('shine','true');
-            var gone = scene.time.addEvent({
-                delay: 10000,
+            }); 
+        },
+        findTarget: function(scene,building){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if(gameState.zombies.getChildren().length > 0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
+        action: function(scene,building){
+            var target = gameState.electroTowerStats.findTarget(scene,building);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, building);
+            var loop = scene.time.addEvent({
+                delay: gameState.electroTowerStats.attackSpeed,
                 callback: ()=>{
-                    iBI.destroy();
-                }, 
-                startAt: 0,
-                timeScale: 1
-            });
-            scene.physics.add.overlap(gameState.character, iBI,(character, iBI)=>{
-                gameState.disableReload = true;
-                iBI.destroy();
-                gone.destroy();
-                gameState.fireRate = gameState.characterStats.fireRate - 35;
-                gameState.ammo = 9999;
-                gameState.createTempText(scene,window.innerWidth/2-100,window.innerHeight/2,"INFINITE BULLETS",10000,25);
-                scene.time.addEvent({
-                    delay: 10000,
-                    callback: ()=>{
-                        gameState.fireRate = gameState.characterStats.fireRate;
-                        gameState.ammo = gameState.characterStats.ammo;
-                        gameState.disableReload = false;
-                    },  
-                    startAt: 0,
-                    timeScale: 1
-                });
-            });
-        }
-        else if(random<=95 && random >=90){
-            var grenade = scene.physics.add.sprite(x,y,'grenadeImage');
-            grenade.anims.play('shine2','true');
-            var gone = scene.time.addEvent({
-                delay: 10000,
-                callback: ()=>{
-                    grenade.destroy();
-                },  
-                startAt: 0,
-                timeScale: 1
-            });
-            scene.physics.add.overlap(gameState.character, grenade,(character, grenade)=>{
-                gameState.createTempText(scene,window.innerWidth/2-100,window.innerHeight/2,"GRENADE",1500,25);
-                gone.destroy();
-                grenade.destroy();
-                var gren = scene.physics.add.sprite(gameState.character.x,gameState.character.y,'grenadeObj');
-                if( gameState.zombies.getChildren().length >0){
+                    gameState.electroTowerStats.createElectricWave(scene,building.x,building.y);
                     var closest = 10000;
-                    var dist;
-                    var target;
                     for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
-                        dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], gameState.character);
-                        if(dist<closest){
-                            closest = dist;
-                            target = gameState.zombies.getChildren()[i];
+                        dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], building);
+                        if(dist<gameState.electroTowerStats.attackRange){
+                            gameState.zombies.getChildren()[i].health -= gameState.electroTowerStats.damage;
                         }
                     }
-                    scene.physics.moveToObject(gren,target,0,500);
-                    scene.time.addEvent({
-                        delay: 500,
-                        callback: ()=>{
-                            var explosion = scene.physics.add.sprite(gren.x,gren.y,'');
-                            explosion.anims.play('explode','true');
-                            scene.time.addEvent({
-                                delay: 1000,
-                                callback: ()=>{
-                                    explosion.destroy();
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                            gren.destroy();
-                            var maxKills = 10;
-                            for (var i = 0; i < gameState.zombies.getChildren().length; i++){
-                                if(Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], gren)<150&&maxKills>0){
-                                    gameState.zombies.getChildren()[i].health -= 100;
-                                    maxKills--;
-                                }
-                            }
-                        },  
-                        startAt: 0,
-                        timeScale: 1
-                    });
-                } else{
-                    gren.destroy();
-                }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            loop.paused = true;
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                    }
+                    else {
+                        gameState.electroTowerStats.findTarget(scene,building)
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
             });
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health > 0){
+                        target = gameState.electroTowerStats.findTarget(scene,building);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, building);
+                        if(dist < gameState.electroTowerStats.attackRange){
+                            if(target.x < building.x){
+                                building.flipX = true;
+                            }else {
+                                building.flipX = false;
+                            }
+                            building.anims.play('electroTowerAction',true);
+                            loop.paused = false;
+                        }
+                        else {
+                            loop.paused = true;
+                            building.anims.play('electroTowerIdle',true);
+                        }
+                    }
+                    else {
+                        bLoop.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                        building.destroy(); 
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });  
         }
-        else if(random<=89 && random >= 85){
-            var medic = scene.physics.add.sprite(x,y,'medicImage');
-            medic.anims.play('shine3','true');
-            var gone = scene.time.addEvent({
+    },
+    
+    woodWallStats:{
+        cost: 25,
+        health: 50,
+        count: 0,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'woodWall').setDepth(scene.input.y).setImmovable();
+            tower.body.offset.y = 15;
+            tower.body.height = 15;
+            tower.health = gameState.woodWallStats.health;
+            gameState.woodWallStats.action(scene,tower);
+        },
+        action: function(scene,building){
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop1.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    barrackStats:{
+        cost: 500,
+        damage: 0,
+        health: 500,
+        attackRange: 0,
+        guardCount: 3,
+        guardRadius: 150,
+        attackSpeed: 0,
+        count: 0,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'barracks').setDepth(scene.input.y).setImmovable();
+            tower.health = gameState.barrackStats.health;
+            tower.guardCount = 0;
+            gameState.barrackStats.action(scene,tower);
+        },
+        action: function(scene,building){
+            building.anims.play('barracksAction',true);
+            var loop = scene.time.addEvent({
+                delay: 7500,
+                callback: ()=>{
+                    if(building.guardCount <gameState.barrackStats.guardCount){
+                        building.guardCount += 1;
+                        gameState.humanGuardStats.spawnHuman(scene,building.x+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius,building.y+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius,building);
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            var loop1 = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(building.health <=0){
+                        gameState.createExplosion(scene,building.x,building.y);
+                        building.destroy();
+                        loop.destroy();
+                        loop1.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    humanGuardStats:{
+        name: "Human Guard",
+        speed: 30,
+        health: 100,
+        damage: 10,
+        attackRange: 150,
+        attackSpeed: 200,
+        spawnHuman: function(scene,x,y,barracks){
+            var human = gameState.buildings.create(x,y,`humanGuard`).setDepth(1);
+            human.anims.play(`humanGuardSpawn`);
+            scene.time.addEvent({
+                delay: 1310,
+                callback: ()=>{
+                    gameState.humanGuardStats.behaviourLoop(scene,human,barracks);
+                },  
+                startAt: 0,
+                timeScale: 1
+            }); 
+        },
+        movement: function (scene,human,target,barracks){
+            var x = barracks.x+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius;
+            var y = barracks.y+Math.random()*gameState.barrackStats.guardRadius*2-gameState.barrackStats.guardRadius;
+            scene.physics.moveTo(human,x,y,gameState.humanGuardStats.speed);
+            human.anims.play('humanGuardWalk',true);
+            if(human.x < x){
+                human.flipX = false;
+            }
+            else if(human.x > x){
+                human.flipX = true;
+            }
+        },
+        attack: function (scene, target,human){
+            if(human.x < target){
+                human.flipX = false;
+            }
+            else if(human.x > target){
+                human.flipX = true;
+            }
+            var bullet = gameState.bullets.create(human.x,human.y,'bullet');
+            gameState.angle=Phaser.Math.Angle.Between(human.x,human.y,target.x,target.y);
+            bullet.setRotation(gameState.angle); 
+            scene.physics.moveTo(bullet,target.x,target.y,300);
+            var bulletLoop = scene.time.addEvent({
                 delay: 10000,
                 callback: ()=>{
-                    medic.destroy();
+                    bullet.destroy();
                 },  
                 startAt: 0,
                 timeScale: 1
             });
-            scene.physics.add.overlap(gameState.character, medic,(character, medic)=>{
-                gameState.createTempText(scene,window.innerWidth/2-100,window.innerHeight/2,"HEALED",1500,25);
-                medic.destroy();
-                gameState.health += 50;
-                if(gameState.health > gameState.characterStats.health){
-                    gameState.health = gameState.characterStats.health;
+            scene.physics.add.overlap(bullet, gameState.zombies,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                targ.health -= gameState.humanGuardStats.damage;
+            });
+        },
+        findTarget: function(scene,human){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if( gameState.zombies.getChildren().length >0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], human);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
                 }
-            });
-        }
-    },
-    
-    zombie :{
-        speed: 75,
-        health : 100,
-        damage : 10,
-        image: 'zombie'
-    },
-    sarmsZombie :{
-        speed: 70,
-        runSpeed: 170,
-        health : 4000,
-        damage : 27,
-        name: 'sarmsZombie'
-    },
-    quadZombie :{
-        health : 3000,
-        damage : 50,
-        damageRange : 190,
-        name: 'quadZombie'
-    },
-    cloneZombie :{
-        health : 2000,
-        damage : 25,
-        grenDamage: 50,
-        speed : 150,
-        projectileSpeed: 200,
-        name: 'Clone Zombie'
-    },
-    
-    
-    createZombie: function (scene,inX,inY,zomStats){
-        var zombie = gameState.zombies.create(inX,inY,`${zomStats.image}`).setDepth(1);
-        zombie.health = zomStats.health;
-        function zombieB(zom){
-            zom.setCollideWorldBounds(true);
-            var attack = scene.time.addEvent({
-                delay: 500,
-                callback: ()=>{
-                    gameState.health -= zomStats.damage;
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,human,barracks){
+            human.anims.play(`humanGuardWalk`);
+            human.health = gameState.humanGuardStats.health;
+            var target = gameState.humanGuardStats.findTarget(scene,human);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, human);
             var loop = scene.time.addEvent({
-                delay: 1,
+                delay: gameState.humanGuardStats.attackSpeed,
                 callback: ()=>{
-                    if (zom.health > 0){
-                        zom.depth = zom.y-40;
-                        if(gameState.character.x > zom.x){
-                            zom.flipX = false;
-                        }
-                        else if(gameState.character.x < zom.x){
-                            zom.flipX = true;
-                        }
-                        var dist = Phaser.Math.Distance.BetweenPoints(gameState.character, zom);
-                        if(dist > 30){
-                            attack.paused = true;
-                            scene.physics.moveTo(zom,gameState.character.x, gameState.character.y,zomStats.speed);
-                            zom.anims.play('zombieWalk',true);
-                        }
-                        else {
-                            attack.paused = false;
-                            zom.anims.play('zombieStrike',true);
-                            zom.setVelocityX(0);
-                            zom.setVelocityY(0);
-                        }
-                    }
-                    else {
-                        if(gameState.bossBattle == false){
-                            gameState.kills++;
-                            gameState.createItem(scene,zom.x,zom.y);
-                        }
-                        loop.destroy();
-                        attack.destroy();
-                        zom.setVelocityX(0);
-                        zom.setVelocityY(0);
-                        gameState.bossSummonKills++;
-                        if(gameState.skin == "characterGoldenGun"){
-                            zom.anims.play('zombieGoldDeath','true');
-                        }else {
-                            zom.anims.play('zombieDeath','true');
-                        }
-                        scene.time.addEvent({
-                            delay: 400,
-                            callback: ()=>{
-                                zom.destroy();
-                            },  
-                            startAt: 0,
-                            timeScale: 1
-                        });
-                    }
+                    gameState.humanGuardStats.attack(scene,target,human);
                 },  
                 startAt: 0,
                 timeScale: 1,
                 repeat: -1
-            });
-        };
-        zombie.anims.play('zombieSpawn');
-        scene.time.addEvent({
-            delay: 800,
-            callback: ()=>{
-                zombieB(zombie);
-            },  
-            startAt: 0,
-            timeScale: 1
-        });
-    },
-    buffZombies: function(){
-        gameState.bossM.setMute(true);
-        gameState.arenaM.setMute(false);
-        gameState.bossBattle = false;
-        gameState.coinsAdd++;
-        if(gameState.zombie.speed <= 150){
-            gameState.zombie.speed += 15;
-            gameState.zombie.health += 10;
-        }
-    },
-    
-    
-    createSarmsZombie: function (scene,inX,inY){
-        var zombie = gameState.zombies.create(inX,inY,`sarmsZombie`).setDepth(1);
-        zombie.health = gameState.sarmsZombie.health;
-        zombie.rage = false;
-        zombie.breathe = false;
-        function zombieB(zom){
-            zom.setCollideWorldBounds(true);
-            var attack = scene.time.addEvent({
-                delay: 350,
-                callback: ()=>{
-                    gameState.health -= gameState.sarmsZombie.damage;
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var breatheLoop;
-            var rageTimer = scene.time.addEvent({
+            }); 
+            var moveLoop = scene.time.addEvent({
                 delay: 3000,
                 callback: ()=>{
-                    zom.rage = true;
-                    rageTimer.paused = true;
-                    breatheLoop = scene.time.addEvent({
-                        delay: 6500,
-                        callback: ()=>{
-                            zom.rage = false;
-                            breatheTimer.paused = false;
-                            attack.paused = true;
-                            zom.breathe = true;
-                            zom.anims.play('sarmsZombieBreathe','true');
-                            zom.setVelocityX(0);
-                            zom.setVelocityY(0);
-                        },  
-                        startAt: 0,
-                        timeScale: 1
-                    });
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var breatheTimer = scene.time.addEvent({
-                delay: 2500,
-                callback: ()=>{
-                    rageTimer.paused = false;
-                    breatheTimer.paused = true;
-                    zom.breathe = false;
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            breatheTimer.paused = true;
-            var bars = scene.add.group();
-            var barBg = scene.add.image(window.innerWidth/2-505, 65, 'healthBarBg').setDepth(window.innerHeight+1).setOrigin(0,0);
-            for (var i = 0; i < 100;i++){
-                var bar = bars.create(barBg.x+(10*(i+1)), barBg.y+17, 'zombieHealthBar').setDepth(window.innerHeight+1);
-            }
-            var checkHealthBar = scene.time.addEvent({
-                delay: 1,
-                callback:()=>{
-                    if ((zom.health/(gameState.sarmsZombie.health/100)) < bars.getChildren().length && bars.getChildren().length > 0){
-                        bars.getChildren()[bars.getChildren().length-1].destroy();
+                    if(loop.paused == true){
+                        gameState.humanGuardStats.movement(scene,human,target,barracks);
                     }
                 },  
                 startAt: 0,
                 timeScale: 1,
-                repeat: -1
-            });
-            var loop = scene.time.addEvent({
+                repeat:-1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
                 delay: 1,
                 callback: ()=>{
-                    if (zom.health > 0){
-                        zom.depth = zom.y-40;
-                        if(gameState.character.x > zom.x){
-                            zom.flipX = false;
-                        }
-                        else if(gameState.character.x < zom.x){
-                            zom.flipX = true;
-                        }
-                        var dist = Phaser.Math.Distance.BetweenPoints(gameState.character, zom);
-                        if(dist > 50){
-                            if(zom.breathe == false){
-                                attack.paused = true;
-                                if(zom.rage == true){
-                                    zom.anims.play('sarmsZombieRun',true);
-                                    scene.physics.moveTo(zom,gameState.character.x, gameState.character.y,gameState.sarmsZombie.runSpeed);
-                                }else {
-                                    zom.anims.play('sarmsZombieWalk',true);
-                                    scene.physics.moveTo(zom,gameState.character.x, gameState.character.y,gameState.sarmsZombie.speed);
-                                }
-                            }
+                    if(barracks.health <= 0){
+                        bLoop.destroy();
+                        loop.destroy();
+                        moveLoop.destroy();
+                        human.anims.play('humanGuardDeath',true);
+                        human.setVelocityX(0);
+                        human.setVelocityY(0);
+                        scene.time.addEvent({
+                            delay: 400,
+                            callback: ()=>{
+                            human.destroy(); 
+                            },  
+                            startAt: 0,
+                            timeScale: 1
+                        }); 
+                    }
+                    if(human.health > 0){
+                        human.depth = human.y;
+                        target = gameState.humanGuardStats.findTarget(scene,human);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, human);
+                        if(dist < gameState.humanGuardStats.attackRange){
+                            human.setVelocityX(0);
+                            human.setVelocityY(0);
+                            loop.paused = false;
+                            human.anims.play('humanGuardAction',true);
                         }
                         else {
-                            if(zom.breathe == false){
-                                attack.paused = false;
-                                zom.anims.play('sarmsZombieStrike',true);
-                                zom.setVelocityX(0);
-                                zom.setVelocityY(0);
-                            }
+                            loop.paused = true;
                         }
                     }
                     else {
-                        gameState.coins += 50;
+                        barracks.guardCount -= 1;
+                        bLoop.destroy();
                         loop.destroy();
-                        attack.destroy();
-                        rageTimer.destroy();
-                        checkHealthBar.destroy();
-                        breatheLoop.destroy();
-                        barBg.destroy();
-                        zom.setVelocityX(0);
-                        zom.setVelocityY(0);
-                        zom.anims.play('sarmsZombieDeath','true');
-                        gameState.checkBoss.paused = false;
+                        moveLoop.destroy();
+                        human.anims.play('humanGuardDeath',true);
+                        human.setVelocityX(0);
+                        human.setVelocityY(0);
                         scene.time.addEvent({
                             delay: 400,
                             callback: ()=>{
-                                zom.destroy();
-                                gameState.spawnZombies.paused = false;
-                                gameState.buffZombies();
+                            human.destroy(); 
                             },  
                             startAt: 0,
                             timeScale: 1
-                        });
+                        }); 
                     }
                 },  
                 startAt: 0,
                 timeScale: 1,
                 repeat: -1
-            });
-        };
-        zombie.anims.play('zombieSpawn');
-        scene.time.addEvent({
-            delay: 800,
-            callback: ()=>{
-                zombieB(zombie);
-            },  
-            startAt: 0,
-            timeScale: 1
-        });
-    },
-    
-    
-    createQuadZombie: function (scene,inX,inY){
-        var zombie = gameState.zombies.create(inX,inY,`quadZombie`).setDepth(1);
-        zombie.health = gameState.quadZombie.health;
-        function zombieB(zom){
-            var attack = scene.time.addEvent({  
-                delay: 6000,
-                callback: ()=>{
-                    attack.timeScale = 1;
-                    zom.anims.play('quadZombieBend');
-                    gameState.one = scene.time.addEvent({
-                        delay: 500,
-                        callback: ()=>{
-                            gameState.two = zom.anims.play('quadZombieLaunch');
-                            scene.time.addEvent({
-                                delay: 200,
-                                callback: ()=>{
-                                    scene.physics.moveTo(zom,zom.x,zom.y-1,1200);
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                            gameState.three = scene.time.addEvent({
-                                delay: 500,
-                                callback: ()=>{
-                                    zom.x = 10000;
-                                    zom.y = 10000;
-                                    zom.setVelocityX(0);
-                                    zom.setVelocityY(0);
-                                    zom.anims.play('quadZombieBend');
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                        },  
-                        startAt: 0,
-                        timeScale: 1
-                    });
-                    gameState.four = scene.time.addEvent({
-                        delay: 3000,
-                        callback: ()=>{
-                            var targeter = scene.add.sprite(Math.random()*50+gameState.character.x, Math.random()*50+gameState.character.y,'quadZombieAbility').setDepth(0).setScale(2);
-                            targeter.anims.play('quadZombieTarget');
-                            gameState.five = scene.time.addEvent({
-                                delay: 1000,
-                                callback: ()=>{
-                                    zom.x = targeter.x;
-                                    zom.y = -160;
-                                    scene.physics.moveToObject(zom,targeter,0,200);
-                                    gameState.six = scene.time.addEvent({
-                                        delay: 200,
-                                        callback: ()=>{
-                                            zom.setVelocityX(0);
-                                            zom.setVelocityY(0);
-                                            targeter.destroy();
-                                            for (var i = 0; i < gameState.zombies.getChildren().length; i++){
-                                                if(Phaser.Math.Distance.BetweenPoints(zom, gameState.character)<gameState.quadZombie.damageRange){
-                                                    gameState.health -= gameState.quadZombie.damage;
-                                                }
-                                            }
-                                            var quake = scene.add.sprite(zom.x, zom.y,'quadZombieAbility').setDepth(0).setScale(1.7);
-                                            quake.anims.play('quadZombieQuake');
-                                            scene.time.addEvent({
-                                                delay: 1000,
-                                                callback: ()=>{
-                                                    quake.destroy();
-                                                },  
-                                                startAt: 0,
-                                                timeScale: 1
-                                            });
-                                        },  
-                                        startAt: 0,
-                                        timeScale: 1
-                                    });
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                        },  
-                        startAt: 0,
-                        timeScale: 1
-                    });
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            attack.timeScale = 3;
-            var bars = scene.add.group();
-            var barBg = scene.add.image(window.innerWidth/2-505, 65, 'healthBarBg').setDepth(window.innerHeight+1).setOrigin(0,0);
-            for (var i = 0; i < 100;i++){
-                var bar = bars.create(barBg.x+(10*(i+1)), barBg.y+17, 'zombieHealthBar').setDepth(window.innerHeight+1);
-            }
-            var checkHealthBar = scene.time.addEvent({
-                delay: 1,
-                callback:()=>{
-                    if ((zom.health/(gameState.quadZombie.health/100)) < bars.getChildren().length && bars.getChildren().length > 0){
-                        bars.getChildren()[bars.getChildren().length-1].destroy();
-                    }
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var loop = scene.time.addEvent({
-                delay: 1,
-                callback: ()=>{
-                    if (zom.health > 0){
-                        var dist = Phaser.Math.Distance.BetweenPoints(gameState.character, zom);
-                        if(dist > 50){
-                            
-                        }
-                        else {
-                            if(zom.breathe == false){
-                                attack.paused = false;
-                                zom.anims.play('sarmsZombieStrike',true);
-                                zom.setVelocityX(0);
-                                zom.setVelocityY(0);
-                            }
-                        }
-                    }
-                    else {
-                        gameState.coins += 50;
-                        loop.destroy();
-                        attack.destroy();
-                        checkHealthBar.destroy();
-                        barBg.destroy();
-                        zom.setVelocityX(0);
-                        zom.setVelocityY(0);
-                        zom.anims.play('quadZombieDeath','true');
-                        gameState.one.destroy();
-                        gameState.two.destroy();
-                        gameState.three.destroy();
-                        gameState.four.destroy();
-                        gameState.five.destroy();
-                        gameState.six.destroy();
-                        gameState.checkBoss.paused = false;
-                        scene.time.addEvent({
-                            delay: 400,
-                            callback: ()=>{
-                                zom.destroy();
-                                gameState.spawnZombies.paused = false;
-                                gameState.buffZombies();
-                            },  
-                            startAt: 0,
-                            timeScale: 1
-                        });
-                    }
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-        };
-        zombie.anims.play('quadZombieSpawn');
-        scene.time.addEvent({
-            delay: 800,
-            callback: ()=>{
-                zombieB(zombie);
-            },  
-            startAt: 0,
-            timeScale: 1
-        });
-    },
-    
-    
-    createCloneZombie: function (scene,inX,inY){
-        var zombie = gameState.zombies.create(inX,inY,`zombieClone`).setDepth(1);
-        zombie.health = gameState.cloneZombie.health;
-        function zombieB(zom){
-            zom.setCollideWorldBounds(true);
-            zom.anims.play('cloneZombieMove');
-            var attackBursts;
-            scene.physics.moveTo(zom,Math.random()*window.innerWidth,Math.random()*window.innerHeight,0,3000);
-            var attack = scene.time.addEvent({
-                delay: 4000,
-                callback: ()=>{
-                    attackBursts = scene.time.addEvent({
-                        delay: 200,
-                        callback: ()=>{
-                            var flash;
-                            var bullet;
-                            if (zom.flipX == false){
-                                flash = scene.physics.add.sprite(zom.x + 43, zom.y+10,'gunFlash').setDepth(1);
-                                bullet = gameState.bullets.create(zom.x + 37,zom.y+5,'bullet1');
-                            }else {
-                                flash = scene.physics.add.sprite(zom.x - 25, zom.y+10,'gunFlash').setDepth(1);
-                                zom.flipX = true;
-                                bullet = gameState.bullets.create(zom.x-25,zom.y+5,'bullet1');
-                            }
-                            var rand = Math.ceil(Math.random()*3);
-                            if (rand == 1){
-                                flash.anims.play('flash1','true');
-                            }else if (rand == 2){
-                                flash.anims.play('flash2','true');
-                            }else {
-                                flash.anims.play('flash3','true');
-                            }
-                            scene.time.addEvent({
-                                delay: 10,
-                                callback: ()=>{
-                                    flash.destroy();
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                            gameState.angle=Phaser.Math.Angle.Between(bullet.x,bullet.y,gameState.character.x,gameState.character.y);
-                            bullet.setRotation(gameState.angle); 
-                            scene.physics.moveToObject(bullet,gameState.character,gameState.characterStats.bulletSpeed/1.25);
-                            var bulletLoop = scene.time.addEvent({
-                                delay: 5000,
-                                callback: ()=>{
-                                    bullet.destroy();
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                            scene.physics.add.overlap(bullet, gameState.character,(bulletT, target)=>{
-                                var angle = Phaser.Math.Angle.Between(bulletT.x,bulletT.y,target.x,target.y);
-                                var blood = scene.physics.add.sprite(target.x+10,target.y, 'bulletBlood');
-                                blood.setRotation(angle);
-                                blood.anims.play('animate','true');
-                                scene.time.addEvent({
-                                    delay: 200,
-                                    callback: ()=>{
-                                        blood.destroy();
-                                    },  
-                                    startAt: 0,
-                                    timeScale: 1
-                                });
-                                bulletLoop.destroy();
-                                bulletT.destroy();
-                                gameState.health -= gameState.cloneZombie.damage;
-                            });
-                        },  
-                        startAt: 0,
-                        timeScale: 1,
-                        repeat: 4
-                    });
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var move = scene.time.addEvent({
-                delay: 3000,
-                callback: ()=>{
-                    scene.physics.moveTo(zom,Math.random()*window.innerWidth,Math.random()*window.innerHeight,0,3000);
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var grenadeTimer = scene.time.addEvent({
-                delay: 10000,
-                callback: ()=>{
-                    var gren = scene.physics.add.sprite(zom.x,zom.y,'grenadeObj');
-                    scene.physics.moveToObject(gren,gameState.character,0,1000);
-                    scene.time.addEvent({
-                        delay: 1000,
-                        callback: ()=>{
-                            var explosion = scene.physics.add.sprite(gren.x,gren.y,'');
-                            explosion.anims.play('explode','true');
-                            scene.time.addEvent({
-                                delay: 1000,
-                                callback: ()=>{
-                                    explosion.destroy();
-                                },  
-                                startAt: 0,
-                                timeScale: 1
-                            });
-                            gren.destroy();
-                            if(Phaser.Math.Distance.BetweenPoints(gameState.character, gren)<75){
-                                gameState.health -= gameState.cloneZombie.grenDamage;
-                            }
-                        },  
-                        startAt: 0,
-                        timeScale: 1
-                    });
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var bars = scene.add.group();
-            var barBg = scene.add.image(window.innerWidth/2-505, 65, 'healthBarBg').setDepth(window.innerHeight+1).setOrigin(0,0);
-            for (var i = 0; i < 100;i++){
-                var bar = bars.create(barBg.x+(10*(i+1)), barBg.y+17, 'zombieHealthBar').setDepth(window.innerHeight+1);
-            }
-            var checkHealthBar = scene.time.addEvent({
-                delay: 1,
-                callback:()=>{
-                    if ((zom.health/(gameState.cloneZombie.health/100)) < bars.getChildren().length && bars.getChildren().length > 0){
-                        bars.getChildren()[bars.getChildren().length-1].destroy();
-                    }
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-            var loop = scene.time.addEvent({
-                delay: 1,
-                callback: ()=>{
-                    if (zom.health > 0){
-                        zom.depth = zom.y-40;
-                        if(gameState.character.x > zom.x){
-                            zom.flipX = false;
-                        }
-                        else if(gameState.character.x < zom.x){
-                            zom.flipX = true;
-                        }
-                    }
-                    else {
-                        gameState.coins += 50;
-                        loop.destroy();
-                        move.destroy();
-                        attack.destroy();
-                        attackBursts.destroy();
-                        grenadeTimer.destroy();
-                        checkHealthBar.destroy();
-                        barBg.destroy();
-                        zom.setVelocityX(0);
-                        zom.setVelocityY(0);
-                        zom.anims.play('cloneZombieDeath','true');
-                        gameState.checkBoss.paused = false;
-                        scene.time.addEvent({
-                            delay: 400,
-                            callback: ()=>{
-                                zom.destroy();
-                                gameState.spawnZombies.paused = false;
-                                gameState.buffZombies();
-                            },  
-                            startAt: 0,
-                            timeScale: 1
-                        });
-                    }
-                },  
-                startAt: 0,
-                timeScale: 1,
-                repeat: -1
-            });
-        };
-        zombie.anims.play('cloneZombieSpawn');
-        scene.time.addEvent({
-            delay: 800,
-            callback: ()=>{
-                zombieB(zombie);
-            },  
-            startAt: 0,
-            timeScale: 1
-        });
-    },
-    
-    
-    
-    
-    
-    createHealthBar: function(scene,x,y){
-        var bars = [];
-        var xTimes = 1;
-        var barBg = scene.add.image(x, y, 'healthBarBg').setDepth(window.innerHeight+1).setOrigin(0,0).setScale(0.5);
-        for (var i = 0; i < 100;i++){
-            var bar = scene.add.image(x+(5*xTimes), y+8.5, 'healthBar').setDepth(window.innerHeight+1).setScale(0.5);
-            bars.push(bar);
-            xTimes ++;
+            }); 
         }
-        var checkHealth = scene.time.addEvent({
+    },
+    
+    
+    alienTowerStats:{
+        cost: 1500,
+        damage: 0,
+        health: 450,
+        attackRange: 300,
+        attackSpeed: 1,
+        spawnTower: function(scene){
+            var tower = gameState.buildings.create(gameState.blueprintSprite.x,gameState.blueprintSprite.y,'alienTower').setDepth(scene.input.y).setImmovable();
+            tower.health = gameState.alienTowerStats.health;
+            gameState.alienTowerStats.action(scene,tower);
+        },
+        action: function(scene,tower){
+            gameState.ufoStats.spawnUfo(scene,tower.x,tower.y,tower);
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(tower.health > 0){
+                        
+                    }
+                    else {
+                        gameState.createExplosion(scene,tower.x,tower.y);
+                        tower.destroy();
+                        bLoop.destroy();
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            });  
+        }
+    },
+    ufoStats:{
+        name: "Ufo",
+        speed: 0,
+        health: 0,
+        damage: 4,
+        attackRange: 0,
+        attackSpeed: 25,
+        spawnUfo: function(scene,x,y,tower){
+            var ufo = scene.physics.add.sprite(x,y,'ufo').setDepth(window.innerHeight+1);
+            ufo.anims.play('ufoActive',true);
+            gameState.ufoStats.behaviourLoop(scene,ufo,tower);
+        },
+        movement: function (scene,ufo,target,trueTarget){
+            scene.physics.moveToObject(ufo, trueTarget, 0, 1000);
+        },
+        attack: function (scene, target,ufo){
+            var bullet = gameState.bullets.create(ufo.x,ufo.y,'ufoLaser');
+            gameState.angle=Phaser.Math.Angle.Between(ufo.x,ufo.y,target.x,target.y);
+            bullet.setRotation(gameState.angle); 
+            scene.physics.moveToObject(bullet,target,2000,250);
+            var bulletLoop = scene.time.addEvent({
+                delay: 250,
+                callback: ()=>{
+                    bullet.destroy();
+                },  
+                startAt: 0,
+                timeScale: 1
+            });
+            scene.physics.add.overlap(bullet, target,(bull, targ)=>{
+                bulletLoop.destroy();
+                bull.destroy();
+                targ.health -= gameState.ufoStats.damage;
+            });
+        },
+        findTarget: function(scene,tower){
+            var dist;
+            var closest = 10000;
+            var target = gameState.invisibleTarget;
+            if( gameState.zombies.getChildren().length >0){
+                for (var i = 0; i < gameState.zombies.getChildren().length; i++){ 
+                    dist = Phaser.Math.Distance.BetweenPoints(gameState.zombies.getChildren()[i], tower);
+                    if(dist<closest){
+                        closest = dist;
+                        target = gameState.zombies.getChildren()[i];
+                    }
+                }
+            }
+            return target;
+        },
+        behaviourLoop: function (scene,ufo,tower){
+            var trueTarget = scene.add.sprite(0,0,'nothing');
+            var target = gameState.ufoStats.findTarget(scene,tower);
+            var dist = Phaser.Math.Distance.BetweenPoints(target, ufo);
+            var loop = scene.time.addEvent({
+                delay: gameState.ufoStats.attackSpeed,
+                callback: ()=>{
+                    gameState.ufoStats.attack(scene,target,ufo);
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+            var moveLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(loop.paused == true){
+                        gameState.ufoStats.movement(scene,ufo,target,trueTarget);
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat:-1
+            }); 
+            loop.paused = true;
+            var bLoop = scene.time.addEvent({
+                delay: 1,
+                callback: ()=>{
+                    if(tower.health <= 0){
+                        bLoop.destroy();
+                        loop.destroy();
+                        moveLoop.destroy();
+                        gameState.createExplosion(scene,ufo.x,ufo.y);
+                        ufo.destroy();
+                    }
+                    if(tower.health > 0){
+                        target = gameState.ufoStats.findTarget(scene,tower);
+                        dist = Phaser.Math.Distance.BetweenPoints(target, ufo);
+                        if(dist < gameState.alienTowerStats.attackRange){
+                            trueTarget.x = target.x;
+                            trueTarget.y = target.y -100;
+                            scene.physics.moveToObject(ufo, trueTarget, 0, 1000);
+                            loop.paused = false;
+                        }
+                        else {
+                            trueTarget.x = tower.x;
+                            trueTarget.y = tower.y -50;
+                            loop.paused = true;
+                        }
+                    }
+                },  
+                startAt: 0,
+                timeScale: 1,
+                repeat: -1
+            }); 
+        }
+    },
+    
+    
+    createHealthBar: function(scene, object,maxHP){
+        object.hbBG = scene.add.rectangle(object.x,(object.y-object.body.height/2)-20,100,10,0xff0000).setScale(object.body.width/100).setDepth(window.innerHeight);  
+        object.hb = scene.add.rectangle(object.x,(object.y-object.body.height/2)-20,100,10,0x2ecc71).setScale(object.body.width/100).setDepth(window.innerHeight);
+        object.checkHealth = scene.time.addEvent({
             delay: 1,
             callback: ()=>{
-                if ((gameState.health/(gameState.characterStats.health/100)) < bars.length && bars.length > 0){
-                    bars[bars.length-1].destroy();
-                    bars.pop();
-                    xTimes--;
+                
+                if(object.health > 0){
+                    object.hbBG.x = object.x;
+                    object.hbBG.y = (object.y-object.body.height/2)-10;
+                    object.hb.x = object.x;
+                    object.hb.y = (object.y-object.body.height/2)-10;
+                    object.hb.width = object.health/maxHP*100;
+                } else {
+                    object.hbBG.destroy();
+                    object.hb.destroy();
+                    object.checkHealth.destroy();
                 }
-                else if ((gameState.health/(gameState.characterStats.health/100)) > bars.length && bars.length < 100){
-                    var bar = scene.add.image(x+(5*xTimes), y+8.5, 'healthBar').setDepth(window.innerHeight+1).setScale(0.5);
-                    bars.push(bar);
-                    xTimes ++;
+                if(object.health == maxHP){
+                    object.hb.visible = false;
+                    object.hbBG.visible = false;
+                }else{
+                    object.hb.visible = true;
+                    object.hbBG.visible = true;
+                }
+                if(object.health > maxHP){
+                    object.health = maxHP;
                 }
             },  
             startAt: 0,
             timeScale: 1,
             repeat: -1
         });
+        object.destroyHB = function(){
+            object.hbBG.destroy();
+            object.hb.destroy();
+            object.checkHealth.destroy();
+        }
     },
-    createTempText:function(scene,x,y,text,time,size){
-        var text = scene.add.text(x, y, `${text}`, {
-            fill: '#FF0000', 
-            fontSize: `${size}px`,
-            fontFamily: 'Qahiri',
-            strokeThickness: 5,
-        }).setDepth(-100);
-        scene.time.addEvent({
-            delay: time,
-            callback: ()=>{
-                text.destroy();
-            },  
-            startAt: 0,
-            timeScale: 1
-        });
-    }
 }
+
+let save = gameState
